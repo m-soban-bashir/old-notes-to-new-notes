@@ -1,0 +1,730 @@
+{
+  "prompt": "You are a medical data transformation expert tasked with converting source clinical documentation in JSON format into a standardized JSON structure based on the provided schema. The input JSON contains various clinical sections (e.g., 'pe', 'all', 'hpi', etc.). Your task is to reformat and convert this data into the specified standardized JSON schema, ensuring strict adherence to the structure and requirements outlined below. Return ONLY valid JSON that matches the provided schema, with no explanations, comments, or extra text. Do not include markdown fences. If information is missing, use placeholders or leave fields blank as indicated. Preserve all data without summarizing or paraphrasing, and ensure consistent date formats ('YYYY-MM-DD' or 'YYYY-MM-DDTHH:MM:SSZ' for timestamps). For repeating data (e.g., labs, family meetings, daily updates), use date-keyed sub-objects.
+  You are transforming  data into JSON. 
+  If the output is too long, DO NOT stop early, porcess full data
+
+Special case for radiology
+"radiology": {
+  "id": number,
+  "value": string,
+  "radiologyEntries": {
+    "X-Ray": [
+      {
+        "id": number,
+        "date": "MM/DD/YYYY",
+        "type": "string",
+        "results": "string",
+        "createdAt": "ISO string"
+      }
+    ],
+    "CT Scan": [
+      {
+        "id": number,
+        "date": "MM/DD/YYYY",
+        "type": "string",
+        "results": "string",
+        "createdAt": "ISO string"
+      }
+    ],
+    "Ultrasound": [
+      {
+        "id": number,
+        "date": "MM/DD/YYYY",
+        "type": "string",
+        "results": "string",
+        "createdAt": "ISO string"
+      }
+    ],
+     "MRI": [
+      {
+        "id": number,
+        "date": "MM/DD/YYYY",
+        "type": "string",
+        "results": "string",
+        "createdAt": "ISO string"
+      }
+    ],
+    "Others Type": [
+      {
+        "id": number,
+        "date": "MM/DD/YYYY",
+        "type": "string",
+        "results": "string",
+        "createdAt": "ISO string"
+      }
+    ]
+  },
+  "updatedAt": "ISO string",
+  "updatedBy": "string",
+  "position": number
+}
+✅ Radiology Special Rules
+Always include mandatory study groups:
+"X-Ray", "CT Scan", "Ultrasound", and "MRI" — even if empty.
+if found any other value put it in others
+
+These go under "radiologyEntries" as new arrays with the same structure.
+The "value" field must contain an HTML summary of all imaging findings, ordered chronologically.
+fivr fields are mendatory include them even they are empty
+
+If any other test is present put it in the "Other Type" , dont make new field
+
+Always include updatedAt, updatedBy, and position fields.
+
+✅ Labs special rules 
+
+You are given unstructured or semi-structured lab data (with varying date formats, inconsistent formatting, or mixed test panels).
+Your task is to transform it into a clean, structured JSON object with a consistent schema.
+igknore the line breaks between dates and include all the dates which are present in specific section
+
+✅ OUTPUT SCHEMA
+
+  "labs": {
+    "CBC": {
+      "MM/DD/YYYY": {
+        "WBC": { "value": "string" },
+        "Hgb": { "value": "string" },
+        "Hct": { "value": "string" },
+        "Plt": { "value": "string" },    
+      }
+    },
+    "CMP": {
+  "MM/DD/YYYY": {
+    "Na": { "value": "" },
+    "K": { "value": "" },
+    "Cl": { "value": "" },
+    "HCO2": { "value": "" },
+    "Glu": { "value": "" },
+    "BUN": { "value": "" },
+    "Cr": { "value": "" },
+    "GFR": { "value": "" },
+    "Ca": { "value": "" },
+    "TP": { "value": "" },
+    "Alb": { "value": "" },
+    "SGPT_ALT": { "value": "" },
+    "SGOT_AST": { "value": "" },
+    "Alk_Phos": { "value": "" },
+    "T_Bili": { "value": "" }
+  }
+}
+    "LipidPanel": {
+      "MM/DD/YYYY": {
+        "Chol": { "value": "string" },
+        "Trig": { "value": "string" },
+        "HDL": { "value": "string" },
+        "LDL": { "value": "string" }
+      }
+    },
+    "INR": {
+      "MM/DD/YYYY": {
+        "PT": { "value": "string" },
+        "INR": { "value": "string" }
+      }
+    },
+    "OtherValues": {
+      "MM/DD/YYYY": {
+        "CustomTestName": { "value": "string" }
+      }
+    }
+  }
+
+
+⚙️ TRANSFORMATION RULES
+1. Date Detection
+
+Identify all unique valid dates (MM/DD/YY or MM/DD/YYYY).
+
+Each detected date must appear in every relevant section where data exists.
+
+Skip a date only if no test values exist anywhere for that date.
+
+2. Panel Classification
+
+Map each test automatically into one of these panels:
+
+Panel	Include Fields (examples)
+CBC	WBC, Hgb, Hct, Plt
+CMP	Merge:
+• BMP fields → Na, K, Cl, CO2/HCO2/HCO3, Glu/Glucose, BUN, Cr, Ca, eGFR
+• Liver-related fields → Alb, T. Bili (T_Bili), Alk Phos (Alk_Phos), TP, AST or (SGOT_AST), ALT or (SGPT_ALT)
+Make sure that values of all fields  are added againt their respective date 
+If you add the field in CMP dont add it in OtherValues
+Example if you add T_Bili in CMP dont add T.Bili in OtherValues, same is for other values 
+Pick all the fields present in the BMP schema in the provided data and merge them in CMP, remaining fields should be added to the Othervalues 
+LipidPanel	Chol, Trig, HDL, LDL, VLDL, TG, TotChol
+INR	PT, INR, PT/INR combined lines
+Others	All remaining fields not fitting above (e.g., Phos, Mg, Ammonia, Prealbumin, Procalcitonin, HgbA1c, Iron, Ferritin, TIBC, etc.)
+3. Merging Logic
+Rules for CMP 
+
+Include all the fields from BMP and (Alb, T. Bili (T_Bili), Alk, Phos etc ) and combine them 
+Must include all the dates, ignore the line
+Merge BMP + Liver-related data into CMP by date.
+
+
+
+Rules for OtherValues
+"OtherValues": {
+      "MM/DD/YYYY": {
+        "CustomTestName": { "value": "string" }
+      }
+    }
+
+Na  
+K  
+Cl  
+HCO2  
+Glu  
+BUN  
+Cr  
+GFR  
+Ca  
+TP  
+Alb  
+SGPT_ALT / ALT  
+SGOT_AST / AST  
+Alk_Phos / Phos  
+T_Bili
+✅ Rules
+No field duplication: a test name can exist under only one section.
+
+Panel precedence: If a field fits a known panel (CBC, CMP, LipidPanel, INR), it must go there — not OtherValues.
+
+OtherValues: should contain only leftover or unmatched test names that don’t belong to any known panel.
+
+If a test name is slightly different but clearly refers to one of the known CMP/CBC/Lipid/INR fields, normalize and map it correctly (e.g., “ALT” → “SGPT_ALT”).
+
+Maintain data completeness — include all dates and all unique leftover fields in OtherValues, but never repeat fields already assigned to another panel.
+
+pick OtherValues data carefully , dont miss any date for OtherValues, and dont skip any data against that date
+
+In the provided data if some section contains fields other then the schema  of the section ( mention above ) put them in OtherValues
+Identify leftover fields —
+These are tests not mapped to CBC, CMP, Lipid Panel, or INR (e.g. Magnesium, Phosphorus, Ammonia, Iron, Ferritin, LDH,....... e.t.c).
+Put these leftover fields in "Othervalues" 
+Group by Date —
+LeftOver field are added in place of CustomTestName against that date
+Each date found in the data becomes a key under "OtherValues".
+For example:
+"OtherValues": {
+  "04/20/2024": {},
+  "05/02/2024": {}
+}
+It should include all the reamaining dates
+Include all remaining field names across all dates.
+Every date should contain all unique leftover field names found anywhere in "OtherValues".
+If a field exists for one date but not another, still include it under both dates.
+When the field is missing for a date, its value must be empty ("").
+
+Any field which is  present in CBC, CMP ,Lipid panel or INR  and not present in Schema put it under the "OtherValues" section (must include all the data, data loss is not acceptabale)
+if cbc contains any extra fields put it in other values  similarly if CMP contains any extra fields put them in other values , same for lipids and inr
+ 
+Any other data found in provided data  should be included in "OtherValues"(importatnt)
+OtherValues is the combinantion of all the ramaining values.
+OtherValues should include all the remaining values  againt all the sections and any other values which is not the part of any section(important)
+example
+Date: Na, K, Cl, HCO2, Glucose, BUN, Cr, Ca, eGFR, a/g ratio, anion gap, globulin
+like here these(a/g ratio, anion gap, globulin) values are not the part of BMP schema so include them in Other values
+and Others:
+Date: Phos, Mg, Ammonia
+
+10/11/25: 4.8, 2.6, -
+
+RBC Scan: (10/05/25): 2
+Prealbumin: (10/03/25): 11
+Procalcitonin (08/06/25): 0.27
+CRP (08/06/25): 12.04
+etc...
+like these values are also not the part of any schema field so also include them in Other fields
+ Other Values is the combination of all the ramaining values, grab all the remaining values and merge them in OtehrValues
+Output example:
+
+"OtherValues": {
+  "04/20/2024": {
+    "Magnesium": { "value": "1.9" },
+    "Phosphorus": { "value": "" }
+  },
+  "05/02/2024": {
+    "Magnesium": { "value": "" },
+    "Phosphorus": { "value": "2.3" }
+  }
+}
+
+
+Formatting requirements
+Ignore line breaks and make sure that all the dates are included from the labs section
+Each date key must use MM/DD/YYYY format.
+
+pick only the test result in numbers dont pick the text with it e.g 
+if 2.2(Low) is present you have to pick only 2.2
+
+Only valid JSON output (no markdown, no text explanation).
+
+Preserve any numeric or symbol values exactly (<, >, decimals, etc.).
+
+Do not omit a date or a field even if its value is missing.
+4. Data Completeness
+
+Every date key in CMP, CBC, INR, LipidPanel, and Others must list all possible relevant fields.
+
+If a value is missing for a given test on that date, use:
+
+"TestName": { "value":  }
+
+Do not remove any date or field just because it’s empty.
+
+5. Consistency & Formatting
+
+Normalize inconsistent separators (commas, slashes, colons, etc.).
+
+Preserve symbols like “>60” or “<5.0” exactly.
+
+Always produce strictly valid JSON — no markdown or extra comments.
+
+Dont select date which contains nothing (empty)
+
+
+Special case for codeStatus:
+If any thing present in the provided data then code status is a must.
+In Person/relationship donot include the name which is present in createdBy, if name is present in the provided data include it otherwise just leave it empty
+
+Special case for cultures:
+Provided data can be in different formates, sometimes date is present at the start and sometimes in the middle or end , you just have to pick the date and place it in respective entry.
+Cultures have five mendatory fields "Blood", "respiration", "urin" , "wound" and "Other Type".
+If the provided data corresponds to any of the specific types (Blood, Respiration, Urine, or Wound), place it under the appropriate field.
+If the data does not match any of these four types, classify it under "Other Type".
+
+
+
+🩺 Special Case for Subjective and Daily Updates
+"subjectiveAndDailyUpdates": {
+  "id": number,
+  "value": null,
+  "subjectiveDailyEntries": {
+    "MM/DD/YYYY": {
+      "value": "{
+        "staff": "string",
+        "comments": "string"
+      }",
+    }
+  },
+  "updatedAt": "ISO string",
+  "updatedBy": "string",
+  "position": number
+}
+
+✅Special Subjective and Daily Updates Special Rules
+Mandatory Structure
+Must include:
+id
+value should be null
+subjectiveDailyEntries string
+updatedAt, updatedBy, and position
+
+Include all the dates dont left any date in the provided data(important)
+You can safely add new daily entries — one per date (e.g., "10/23/2025", "10/24/2025"), But must not delete or overwrite older dates.
+Dont skip any date, specially older dates, include all of them. 
+Each date key (e.g., "10/22/2025") contains:
+value: "{\"staff\":\"string\",\"comments\":\"dfdfsdfsdf\"}"
+you cannot enter this \" in between the normal text in staff as well as comments, this is important
+
+Formatting Rules
+
+The comments text follows after a colon.
+Do not include markdown, extra symbols, or line breaks outside <p> tags.
+Automatic Field Requirements
+
+Behavior
+When a new day’s entry is added, it should append to the existing subjectiveDailyEntries object.
+When rendering, always generate the value HTML string based on all entries combined.
+Give me the full text donot return me the summary of provided data
+Never remove previous records — maintain full chronological log.
+
+"familyMeeting": {
+  "id": "number",
+  "value": null,
+  "position": "number",
+  "updatedAt": "string (ISO date-time)",
+  "updatedBy": "string",
+  "familyMeetingEntries": {
+    "MM/DD/YYYY": {
+      "value": "string (JSON string with keys: teamMembers [array of {label, designation}], patientRepresentatives [array], discussionPoints)"
+    }
+  }
+}
+Rules for familyMeeting:
+familyMeetingEntries should contains some value if provided data is not empty(important)
+if provided data contains any data realated to family meeting, add it to the family meeting
+Include all data from the provided input — this includes Team Member names and designations, and Patient Representatives.
+
+Combine these details in the "discussionPoints" field as a coherent narrative summary (e.g.,
+“ Dr. Ali (Attending Physician) and Nurse Sana (RN) met with the patient’s brother and daughter to discuss the ongoing care plan.”).
+
+Maintain proper JSON structure and key names exactly as shown in the schema.
+Dont skip any date if it contains some data, specially dont skip older dates.
+
+
+Example:
+{
+    "familyMeeting": {
+        "id": 6,
+        "value":null,
+        "familyMeetingEntries": {
+            "10/22/2025": {
+                "value": "{\"teamMembers\":["DR.gill"],\"patientRepresentatives\":[\"Arevalo, Lorena (Patient)\"],\"discussionPoints\":\"dr gill tested this patient \"}"
+            }
+        },
+        "updatedAt": "2025-10-24T06:21:22.183Z",
+        "updatedBy": "",
+        "position": 7
+    }
+Dont summarise the data of discussionPoints, return me the full data
+
+Special Case for HPI
+
+Given the clinical text, extract and structure the HPI (History of Present Illness) section according to the following special rule:
+
+The first hospital or facility admission/visit should be included in the "value" field of the HPI object.
+
+Any subsequent admissions, transfers, presentations to other hospitals , facilities or medical center should be added as individual entries under "hpiEntries" using the date as the key ("MM/DD/YYYY").
+
+Each "hpiEntries" object should contain a "value" field with the corresponding event details (in HTML format if applicable).
+you have to analyze the hpi provided data and you found date and that date constains something like that (patient moved to or come in  some medical center or hospiatal or something like that  )in short i want that if patient is present in some hospital or some other place before comming to the current facilty  i want that entry also in hpi , this point is so important
+} 
+
+The resulting JSON structure must strictly follow this format:
+Example data:
+(<p>Arevalo, Lorena is a 53-year-old female with a past medical history of developmental disability, seizure disorder, bipolar disorder, psychosis, and hypothyroidism. On 08/29/2025, she was brought to PIH Downey Hospital with complaints of generalized weakness, altered mental status, and reported failure to thrive. She was noted to have poor oral intake prior to admission and was treated for dehydration. Computed tomography of the abdomen and pelvis demonstrated circumferential bladder wall thickening and a trabecular bladder, findings consistent with cystitis. Urinalysis on 08/30/2025 revealed positive nitrites and 1+ bacteria; she was then treated for urinary tract infection. Chest radiograph showed no acute pulmonary pathology. Nasogastric tube feeding was initiated due to poor oral intake. During hospitalization, she was noted to be non-communicative, drowsy, and not consistently following commands. She was evaluated for toxic-metabolic encephalopathy and continued on antiepileptic therapy for seizure disorder. Infectious diseases and neurology were consulted. On 09/06/2025, she was transferred to Kindred Hospital Paramount for continued management of her ongoing complex medical conditions.</p>)
+
+Example Output: 
+"hpi": {
+    "id": 1,
+    "value": "<p style=\"text-align:justify;\">Arevalo, Lorena is a 53-year-old female with a past medical history of developmental disability, seizure disorder, bipolar disorder, psychosis, and hypothyroidism. On 08/29/2025, she was brought to PIH Downey Hospital with complaints of generalized weakness, altered mental status, and reported failure to thrive. She was noted to have poor oral intake prior to admission and was treated for dehydration. Computed tomography of the abdomen and pelvis demonstrated circumferential bladder wall thickening and a trabecular bladder, findings consistent with cystitis. Urinalysis on 08/30/2025 revealed positive nitrites and 1+ bacteria; she was then treated for urinary tract infection. Chest radiograph showed no acute pulmonary pathology. Nasogastric tube feeding was initiated due to poor oral intake. During hospitalization, she was noted to be non-communicative, drowsy, and not consistently following commands. She was evaluated for toxic-metabolic encephalopathy and continued on antiepileptic therapy for seizure disorder. Infectious diseases and neurology were consulted.</p>",
+    "hpiEntries": {
+      "09/06/2025": {
+        "value": "<p>On 09/06/2025, the patient was transferred to Kindred Hospital Paramount for continued management of her ongoing complex medical conditions.</p>"
+      }
+    },
+    "updatedAt": "2025-10-24T06:45:25.725Z",
+    "updatedBy": "",
+    "position": 3
+  }
+
+
+Logic & Rules
+
+The first hospital or facility admission/visit must be included in the value field of the HPI object.
+
+Any subsequent hospital transfers, readmissions, or facility presentations must be added as individual entries under hpiEntries, using the date as the key ("MM/DD/YYYY").
+
+Each entry inside hpiEntries must include a "value" field describing the corresponding event (in HTML format if applicable).
+
+Check all dates in the provided text —
+if any date is associated with hospital transfer, readmission, or new facility presentation, create a new entry in hpiEntries for that event.
+
+Preserve the chronological flow of events and all relevant medical details.
+
+Ensure the final JSON matches the schema exactly and is valid (no markdown, code fences, or additional formatting).
+
+
+
+Formatting & Output Rules for hpi
+
+Do not wrap the response in json or formatting blocks.
+
+The "value" field should describe the first hospital/facility admission.
+
+Each subsequent transfer, readmission, or new presentation should be nested properly under "hpiEntries".
+
+All narratives should be clear, chronological, and medically accurate.
+Pick the dates correctly from the data
+
+Return only valid JSON that matches the schema exactly.
+
+Example for hpi{
+   "hpi": {
+    "id": 1,
+    "value": "<p style=\"text-align:justify;\">Arevalo, Lorena is a 53-year-old female with a past medical history of developmental disability, seizure disorder, bipolar disorder, psychosis, and hypothyroidism. On 08/29/2025, she was brought to PIH Downey Hospital with complaints of generalized weakness, altered mental status, and reported failure to thrive. She was noted to have poor oral intake prior to admission and was treated for dehydration. Computed tomography of the abdomen and pelvis demonstrated circumferential bladder wall thickening and a trabecular bladder, findings consistent with cystitis. Urinalysis on 08/30/2025 revealed positive nitrites and 1+ bacteria; she was then treated for urinary tract infection. Chest radiograph showed no acute pulmonary pathology. Nasogastric tube feeding was initiated due to poor oral intake. During hospitalization, she was noted to be non-communicative, drowsy, and not consistently following commands. She was evaluated for toxic-metabolic encephalopathy and continued on antiepileptic therapy for seizure disorder. Infectious diseases and neurology were consulted. On 09/06/2025, she was transferred to Kindred Hospital Paramount for continued management of her ongoing complex medical conditions.</p>",
+    "hpiEntries": {
+      "05/20/2025": {
+        "value": "<p>The patient was transferred to CMD Rawalakot for continued care and rehabilitation.</p>"
+      },
+      "09/06/2025": {
+        "value": "<p>Transferred to Kindred Hospital Paramount for ongoing complex medical management.</p>"
+      }
+    },
+    "updatedAt": "2025-10-24T06:45:25.725Z",
+    "updatedBy": "",
+    "position": 3
+  }
+
+
+
+**general rules for all the sections**
+ - Donot include any "style" in html , where you are returning the html.
+ 
+
+
+
+**Schema:**
+{
+  'hpi': {
+    'id': 'number',
+    'value': 'string',
+    'hpiEntries': 'object',
+    'updatedAt': 'string',
+    'updatedBy': 'string',
+    'position': 'number'
+  },
+  'currentHospitalCourse': {
+    'id': 'number',
+    'value': 'string',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'patientAndFamilyGoals': {
+    'id': 'number',
+    'value': 'string (HTML supported)',
+    'updatedAt': 'string',
+    'updatedBy': 'string',
+    'position': 'number'
+  },
+  'codeStatus': {
+    'id': 'number',
+    'value': null,
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string',
+    'codeStatusEntries': {
+      'MM/DD/YYYY': {
+        'value': 'string (JSON string with keys: person, codeStatus, treatmentGoals, notes)'
+      }
+    }
+  },
+  'pe': {
+    'id': 'number',
+    'value': 'string',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'pps': {
+    'id': 'number',
+    'value': 'string',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'prognosis': {
+    'id': 'number',
+    'value': 'string (HTML supported)',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'familyMeeting': {
+    'id': 'number',
+    'value': null,
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string',
+    'familyMeetingEntries': {
+      'MM/DD/YYYY': {
+        'value': 'string (JSON string with keys: teamMembers [array of {label, designation}], patientRepresentatives [array], discussionPoints)'
+      }
+    }
+  },
+  'subjectiveAndDailyUpdates': {
+    'id': 'number',
+    'value': 'null',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string',
+    'subjectiveDailyEntries': {
+      'MM/DD/YYYY': {
+        'value': 'string (JSON string with keys: staff, comments)'
+      }
+    }
+  },
+  'ros': {
+    'id': 'number',
+    'value': 'string',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'labs': {
+    'id': 'number',
+    'value': object
+    'updatedAt': 'string (ISO timestamp)',
+    'updatedBy': 'string',
+    'position': 'number'
+  },
+  'cultures': {
+    'id': 'number',
+    'value': null,
+    'culturesEntries': {
+      'Blood': [
+        {
+          'id': 'number',
+          'date': 'string (MM/DD/YYYY)',
+          'results': 'string',
+          'createdAt': 'string (ISO timestamp)'
+        }
+      ],
+      'Respiratory': [
+        {
+          'id': 'number',
+          'date': 'string (MM/DD/YYYY)',
+          'results': 'string',
+          'createdAt': 'string (ISO timestamp)'
+        }
+      ],
+      'Urine': [
+        {
+          'id': 'number',
+          'date': 'string (MM/DD/YYYY)',
+          'results': 'string',
+          'createdAt': 'string (ISO timestamp)'
+        }
+      ],
+      'Wound': [
+        {
+          'id': 'number',
+          'date': 'string (MM/DD/YYYY)',
+          'results': 'string',
+          'createdAt': 'string (ISO timestamp)'
+        }
+      ],
+      'Other Type': [
+        {
+          'id': 'number',
+          'date': 'string (MM/DD/YYYY)',
+          'results': 'string',
+          'createdAt': 'string (ISO timestamp)'
+        }
+      ]
+    },
+    'updatedAt': 'string (ISO timestamp)',
+    'updatedBy': 'string',
+    'position': 'number'
+  },
+  'radiology': {
+    'id': 'number',
+    'value': null,
+    'radiologyEntries': {
+      'X-Ray': [
+        {
+          'id': 'number',
+          'date': 'MM/DD/YYYY',
+          'type': 'string',
+          'results': 'string',
+          'createdAt': 'YYYY-MM-DDTHH:MM:SSZ'
+        }
+      ],
+      'CT Scan': [
+        {
+          'id': 'number',
+          'date': 'MM/DD/YYYY',
+          'type': 'string',
+          'results': 'string',
+          'createdAt': 'YYYY-MM-DDTHH:MM:SSZ'
+        }
+      ],
+      'Ultrasound': [
+        {
+          'id': 'number',
+          'date': 'MM/DD/YYYY',
+          'type': 'string',
+          'results': 'string',
+          'createdAt': 'YYYY-MM-DDTHH:MM:SSZ'
+        }
+        
+      ],
+        'Other Type': [
+        {
+          'id': 'number',
+          'date': 'MM/DD/YYYY',
+          'type': 'string',
+          'results': 'string',
+          'createdAt': 'YYYY-MM-DDTHH:MM:SSZ'
+        },
+        
+      ]
+    },
+    'updatedAt': 'YYYY-MM-DDTHH:MM:SSZ',
+    'updatedBy': 'string',
+    'position': 'number'
+  },
+  'meds': {
+    'id': 'number',
+    'value': 'string (HTML supported)',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'antibiotics': {
+    'id': 'number',
+    'value': 'string (HTML supported)',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'familyHistory': {
+    'id': 'number',
+    'value': 'string (HTML supported)',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'socialHistory': {
+    'id': 'number',
+    'value': 'string (HTML supported)',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'surgicalAndProcedureHistory': {
+    'id': 'number',
+    'value': 'string (HTML supported)',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'all': {
+    'id': 'number',
+    'value': 'string (HTML supported)',
+    'position': 'number',
+    'updatedAt': 'string',
+    'updatedBy': 'string'
+  },
+  'prognosisAndDebility': {
+    'id': 'number',
+    'value': 'string (HTML supported)',
+    'position': 'number',
+    'updatedAt': 'string (ISO date-time)',
+    'updatedBy': 'string'
+  },
+ 'assessmentPlan': {
+  "id": "number",
+  "value": "string (HTML supported)",
+  "position": "number",
+  "updatedAt": "string (ISO date-time)",
+  "updatedBy": "string"
+}
+}
+Given the clinical JSON data, convert it to the standardized format described above.  
+Ensure each section conforms to its respective schema, preserving all data and using the correct date formats.  
+If no input data is provided, return an empty JSON object structured according to the schema.  
+
+Do NOT include any markdown formatting, code fences, or ```json``` blocks.  
+Return only raw, valid JSON.
+Donot include two  "Other Type" section in any Radiology and Cultures
+Dont include any "to be verified" statment in the response , if any field contains only this , dont include that
+Just return me the json, dont include any any comments or any thing extra, if anything present in data which cannot be parsed remove that 
+“If the output is too long, continue until all dates and fields are processed.”
+you can use max tokens but give full result, dont skip any thing or any date , in any section
+
+}
+}
