@@ -3,6 +3,31 @@
   You are transforming  data into JSON. 
   If the output is too long, DO NOT stop early, porcess full data
 
+Whenever you encounter a value "randomId" anywhere in the data (regardless of the key name), generate a new unique ID using this JavaScript expression:
+
+${Date.now()}-${Math.floor(Math.random() * 1000000)}
+
+
+Replace "randomId" with the generated ID. Each ID must be unique and follow the exact format "timestamp-randomNumber". Do not reuse old IDs.
+
+Example:
+
+Input:
+
+{
+  "entryId": "randomId",
+  "someOtherId": "randomId"
+}
+
+
+Output:
+
+{
+  "entryId": "1732150498123-492830",
+  "someOtherId": "1732150498124-183920"
+}
+
+Each time, both numbers must be new
 Special case for radiology
 "radiology": {
   "id": number,
@@ -75,57 +100,74 @@ Always include updatedAt, updatedBy, and position fields.
 
 You are given unstructured or semi-structured lab data (with varying date formats, inconsistent formatting, or mixed test panels).
 Your task is to transform it into a clean, structured JSON object with a consistent schema.
-igknore the line breaks between dates and include all the dates which are present in specific section
+ignore the line breaks between dates and include all the dates which are present in specific section
 
 ✅ OUTPUT SCHEMA
 
-  "labs": {
-    "CBC": {
-      "MM/DD/YYYY": {
-        "WBC": { "value": "string" },
-        "Hgb": { "value": "string" },
-        "Hct": { "value": "string" },
-        "Plt": { "value": "string" },    
-      }
+"labs": {
+    "id": "number",
+    "value": {
+      "CBC": [
+        {
+          "id": "randomId",
+          "date": "MM/DD/YYYY",
+          "WBC": "string",
+          "Hgb": "string",
+          "Hct": "string",
+          "Plt": "string"
+        }
+      ],
+      "CMP": [
+        {
+          "id": "randomId",
+          "date": "MM/DD/YYYY",
+          "Na": "string",
+          "K": "string",
+          "Cl": "string",
+          "HCO2": "string",
+          "Glu": "string",
+          "BUN": "string",
+          "Cr": "string",
+          "GFR": "string",
+          "Ca": "string",
+          "TP": "string",
+          "Alb": "string",
+          "SGPT_ALT": "string",
+          "SGOT_AST": "string",
+          "Alk_Phos": "string",
+          "T_Bili": "string"
+        }
+      ],
+      "LipidPanel": [
+        {
+          "id": "randomId",
+          "date": "MM/DD/YYYY",
+          "TotChole": "string",
+          "LDL": "string",
+          "TG": "string",
+          "VLDL": "string",
+          "HDL": "string"
+        }
+      ],
+      "INR": [
+        {
+          "id": "randomId",
+          "date": "MM/DD/YYYY",
+          "PT": "string",
+          "INR": "string"
+        }
+      ],
+      "OtherValues": [
+        {
+          "id": "randomId",
+          "date": "MM/DD/YYYY",
+          "CustomTestName": "string"
+        }
+      ]
     },
-    "CMP": {
-  "MM/DD/YYYY": {
-    "Na": { "value": "" },
-    "K": { "value": "" },
-    "Cl": { "value": "" },
-    "HCO2": { "value": "" },
-    "Glu": { "value": "" },
-    "BUN": { "value": "" },
-    "Cr": { "value": "" },
-    "GFR": { "value": "" },
-    "Ca": { "value": "" },
-    "TP": { "value": "" },
-    "Alb": { "value": "" },
-    "SGPT_ALT": { "value": "" },
-    "SGOT_AST": { "value": "" },
-    "Alk_Phos": { "value": "" },
-    "T_Bili": { "value": "" }
-  }
-}
-    "LipidPanel": {
-      "MM/DD/YYYY": {
-        "Chol": { "value": "string" },
-        "Trig": { "value": "string" },
-        "HDL": { "value": "string" },
-        "LDL": { "value": "string" }
-      }
-    },
-    "INR": {
-      "MM/DD/YYYY": {
-        "PT": { "value": "string" },
-        "INR": { "value": "string" }
-      }
-    },
-    "OtherValues": {
-      "MM/DD/YYYY": {
-        "CustomTestName": { "value": "string" }
-      }
-    }
+    "updatedAt": "string (ISO timestamp)",
+    "updatedBy": "string",
+    "position": "number"
   }
 
 
@@ -164,11 +206,16 @@ Merge BMP + Liver-related data into CMP by date.
 
 
 Rules for OtherValues
-"OtherValues": {
-      "MM/DD/YYYY": {
-        "CustomTestName": { "value": "string" }
-      }
-    }
+"OtherValues": [
+        {
+          "id": "randomId",
+          "date": "MM/DD/YYYY",
+          "CustomTestName": "string"
+        }
+      ]
+
+replace custom names with the values present in the data(dont include trhe word CustomTestName)
+
 
 Na  
 K  
@@ -206,10 +253,16 @@ Group by Date —
 LeftOver field are added in place of CustomTestName against that date
 Each date found in the data becomes a key under "OtherValues".
 For example:
-"OtherValues": {
-  "04/20/2024": {},
-  "05/02/2024": {}
-}
+"OtherValues": [
+  {
+    "id": "randomId",
+    "date": "04/20/2024"
+  },
+  {
+    "id": "randomId",
+    "date": "05/02/2024"
+  }
+]
 It should include all the reamaining dates
 Include all remaining field names across all dates.
 Every date should contain all unique leftover field names found anywhere in "OtherValues".
@@ -239,16 +292,21 @@ like these values are also not the part of any schema field so also include them
  Other Values is the combination of all the ramaining values, grab all the remaining values and merge them in OtehrValues
 Output example:
 
-"OtherValues": {
-  "04/20/2024": {
-    "Magnesium": { "value": "1.9" },
-    "Phosphorus": { "value": "" }
+"OtherValues": [
+  {
+    "id": "randomId",
+    "date": "04/20/2024",
+    "Magnesium": "1.9",
+    "Phosphorus": ""
   },
-  "05/02/2024": {
-    "Magnesium": { "value": "" },
-    "Phosphorus": { "value": "2.3" }
+  {
+    "id": "randomId",
+    "date": "05/02/2024",
+    "Magnesium": "",
+    "Phosphorus": "2.3"
   }
-}
+]
+
 
 
 Formatting requirements
@@ -284,6 +342,27 @@ Always produce strictly valid JSON — no markdown or extra comments.
 Dont select date which contains nothing (empty)
 
 
+The socialHistory schema has the shape:
+{   "id": "number",   "value": "string (HTML supported)",   "position": "number",   "updatedAt": "string",   "updatedBy": "string" } 
+You must always generate the value field in the following exact HTML format:
+value: "<p>\n            <b>Tobacco:</b> sd<br>\n            <b>Alcohol:</b> sd<br>\n            <b>Drugs:</b> [** to be verified **]<br>\n            <b>Work Hx:</b> [** to be verified **]<br>\n            <b>Living Arrangements:</b> [** to be verified **]<br>\n            <b>Marital Status:</b> [** to be verified **]<br>\n            <b>Children:</b> [** to be verified **]<br>\n            <b>Next of Kin:</b> [** to be verified **]<br>\n            </p>"
+patientId: 12798
+
+RULES:
+Never remove, rename, or reorder the existing sections.
+For each section:
+If the provided patient data contains a value for that section, insert that value in place of [** to be verified **].
+If no information is provided, keep exactly [** to be verified **].
+If the patient data includes additional social history fields not in the default template:
+Append them at the end in this exact format:
+<b>{{New Section Name}}:</b> {{New Section Value}}<br> 
+Use only HTML exactly as shown (p tags, b tags, line breaks).
+Do not remove or skip any data that is available.
+Never output placeholder patterns like TBD or empty values.
+Always maintain strict consistency in spacing, punctuation, and line breaks.
+maintain the above  value structure , also include \n
+
+
 Special case for codeStatus:
 If any thing present in the provided data then code status is a must.
 In Person/relationship donot include the name which is present in createdBy, if name is present in the provided data include it otherwise just leave it empty
@@ -294,20 +373,39 @@ Cultures have five mendatory fields "Blood", "respiration", "urin" , "wound" and
 If the provided data corresponds to any of the specific types (Blood, Respiration, Urine, or Wound), place it under the appropriate field.
 If the data does not match any of these four types, classify it under "Other Type".
 
+The pe schema has the shape:
+{   "id": number,   "value": string,   "position": number,   "updatedAt": string,   "updatedBy": string } 
+You must always generate the value field in the following exact HTML format:
+value: "<p>\n            <b>Temperature:</b> [** to be verified **]<br>\n            <b>Blood Pressure:</b> [** to be verified **]<br>\n            <b>Respiratory Rate:</b> [** to be verified **]<br>\n            <b>Heart Rate:</b> /minh<br>\n            <b>VENTILATOR:</b> [** to be verified **]<br>\n            <b>GEN & PSYCH:</b> [** to be verified **]<br>\n            <b>NEURO:</b> [** to be verified **]<br>\n            <b>EYES:</b> [** to be verified **]<br>\n            <b>ENT:</b> dfgd<br>\n            <b>LUNGS:</b> [** to be verified **]<br>\n            <b>CVS:</b> [** to be verified **]<br>\n            <b>ABD:</b> [** to be verified **]<br>\n            <b>SKIN:</b> [** to be verified **]<br>\n            <b>LYMPH:</b> [** to be verified **]<br>\n            <b>MUSCULOSKELETAL:</b> [** to be verified **]<br>\n            </p>" 
+patientId: 12798
+RULES:
+Never remove, rename, or reorder the existing sections.
+For each section:
+If the provided patient data contains a value for that section, insert that value in place of [** to be verified **] between the <br>.
+If no information is provided, use exactly: [** to be verified **].
+If the patient data includes additional PE-related fields that are NOT in the default template:
+Append them at the end in this exact format:
+<b>{{New Section Name}}:</b> {{New Section Value}}<br> 
+Use only HTML exactly as shown (p tags, b tags, line breaks).
+Do not remove or skip ANY data that is available.
+Always put data of specific section in that section not in some other sections , temperature related data should be against temperature (this is very important)
+Always maintain strict consistency in spacing, punctuation, and line breaks.
+Maintain the above  value structure , also include \n
 
 
 🩺 Special Case for Subjective and Daily Updates
-"subjectiveAndDailyUpdates": {
+"subjectiveDailyEntries": [
+    {
+      "entryId": "randomId",
+      "date": "MM/DD/YYYY",
+      "value": "string (JSON string with keys: staff, comments)",
+      "createdAt": "string (ISO timestamp)",
+      "updatedAt": "string (ISO timestamp)"
+    }
+  ],
   "id": number,
   "value": null,
-  "subjectiveDailyEntries": {
-    "MM/DD/YYYY": {
-      "value": "{
-        "staff": "string",
-        "comments": "string"
-      }",
-    }
-  },
+ 
   "updatedAt": "ISO string",
   "updatedBy": "string",
   "position": number
@@ -340,17 +438,21 @@ When rendering, always generate the value HTML string based on all entries combi
 Give me the full text donot return me the summary of provided data
 Never remove previous records — maintain full chronological log.
 
-"familyMeeting": {
-  "id": "number",
-  "value": null,
-  "position": "number",
-  "updatedAt": "string (ISO date-time)",
-  "updatedBy": "string",
-  "familyMeetingEntries": {
-    "MM/DD/YYYY": {
-      "value": "string (JSON string with keys: teamMembers [array of {label, designation}], patientRepresentatives [array], discussionPoints)"
+'familyMeeting': {
+  'id': 'number',
+  'value': null,
+  'position': 'number',
+  'updatedAt': 'string (ISO date-time)',
+  'updatedBy': 'string',
+  'familyMeetingEntries': [
+    {
+      'entryId': 'randomId', 
+      'date': 'MM/DD/YYYY',
+      'value': 'string (JSON string with keys: teamMembers [array of {label, designation}], patientRepresentatives [array], discussionPoints)',
+      'createdAt': 'string (ISO timestamp)',
+      'updatedAt': 'string (ISO timestamp)'
     }
-  }
+  ]
 }
 Rules for familyMeeting:
 familyMeetingEntries should contains some value if provided data is not empty(important)
@@ -366,18 +468,24 @@ Dont skip any date if it contains some data, specially dont skip older dates.
 
 Example:
 {
-    "familyMeeting": {
-        "id": 6,
-        "value":null,
-        "familyMeetingEntries": {
-            "10/22/2025": {
-                "value": "{\"teamMembers\":["DR.gill"],\"patientRepresentatives\":[\"Arevalo, Lorena (Patient)\"],\"discussionPoints\":\"dr gill tested this patient \"}"
-            }
-        },
-        "updatedAt": "2025-10-24T06:21:22.183Z",
-        "updatedBy": "",
-        "position": 7
-    }
+  "familyMeeting": {
+    "id": 6,
+    "value": null,
+    "familyMeetingEntries": [
+      {
+        "entryId": "randomId",
+        "date": "10/22/2025",
+        "value": "{\"teamMembers\":[{\"label\":\"DR.gill\",\"designation\":\"\"}],\"patientRepresentatives\":[\"Arevalo, Lorena (Patient)\"],\"discussionPoints\":\"dr gill tested this patient\"}",
+        "createdAt": "2025-10-22T00:00:00.000Z",
+        "updatedAt": "2025-10-24T06:21:22.183Z"
+      }
+    ],
+    "updatedAt": "2025-10-24T06:21:22.183Z",
+    "updatedBy": "",
+    "position": 7
+  }
+}
+
 Dont summarise the data of discussionPoints, return me the full data
 
 Special Case for HPI
@@ -490,18 +598,23 @@ Example for hpi{
     'updatedBy': 'string',
     'position': 'number'
   },
-  'codeStatus': {
-    'id': 'number',
-    'value': null,
-    'position': 'number',
-    'updatedAt': 'string',
-    'updatedBy': 'string',
-    'codeStatusEntries': {
-      'MM/DD/YYYY': {
-        'value': 'string (JSON string with keys: person, codeStatus, treatmentGoals, notes)'
-      }
+ 'codeStatus': {
+  'id': 'number',
+  'value': null, 
+  'position': 'number',
+  'updatedAt': 'string',
+  'updatedBy': 'string',
+  'codeStatusEntries': [
+    {
+      'entryId': 'randomId',
+      'date': 'MM/DD/YYYY',
+      'value': 'string (JSON string with keys: person, codeStatus, treatmentGoals, notes)',
+      'createdAt': 'string (ISO timestamp)',
+      'updatedAt': 'string (ISO timestamp)'
     }
-  },
+  ]
+}
+
   'pe': {
     'id': 'number',
     'value': 'string',
@@ -523,30 +636,39 @@ Example for hpi{
     'updatedAt': 'string',
     'updatedBy': 'string'
   },
-  'familyMeeting': {
-    'id': 'number',
-    'value': null,
-    'position': 'number',
-    'updatedAt': 'string',
-    'updatedBy': 'string',
-    'familyMeetingEntries': {
-      'MM/DD/YYYY': {
-        'value': 'string (JSON string with keys: teamMembers [array of {label, designation}], patientRepresentatives [array], discussionPoints)'
-      }
+'familyMeeting': {
+  'id': 'number',
+  'value': null,
+  'position': 'number',
+  'updatedAt': 'string',
+  'updatedBy': 'string',
+  'familyMeetingEntries': [
+    {
+      'entryId': 'randomId',
+      'date': 'MM/DD/YYYY',
+      'value': 'string (JSON string with keys: teamMembers [array of {label, designation}], patientRepresentatives [array], discussionPoints)',
+      'createdAt': 'string (ISO timestamp)',
+      'updatedAt': 'string (ISO timestamp)'
     }
-  },
-  'subjectiveAndDailyUpdates': {
-    'id': 'number',
-    'value': 'null',
-    'position': 'number',
-    'updatedAt': 'string',
-    'updatedBy': 'string',
-    'subjectiveDailyEntries': {
-      'MM/DD/YYYY': {
-        'value': 'string (JSON string with keys: staff, comments)'
-      }
+  ]
+},
+
+"subjectiveAndDailyUpdates": {
+  "id": "number",
+  "value": null,
+  "position": "number",
+  "updatedAt": "string (ISO date-time)",
+  "updatedBy": "string",
+  "subjectiveDailyEntries": [
+    {
+      "entryId": "randomId",
+      "date": "MM/DD/YYYY",
+      "value": "string (JSON string with keys: staff, comments)",
+      "createdAt": "string (ISO timestamp)",
+      "updatedAt": "string (ISO timestamp)"
     }
-  },
+  ]
+},
   'ros': {
     'id': 'number',
     'value': 'string',
@@ -554,12 +676,70 @@ Example for hpi{
     'updatedAt': 'string',
     'updatedBy': 'string'
   },
-  'labs': {
-    'id': 'number',
-    'value': object
-    'updatedAt': 'string (ISO timestamp)',
-    'updatedBy': 'string',
-    'position': 'number'
+   "labs": {
+    "id": "number",
+    "value": {
+      "CBC": [
+        {
+          "id": "randomId",
+          "date": "string (MM/DD/YYYY)",
+          "WBC": "string",
+          "Hgb": "string",
+          "Hct": "string",
+          "Plt": "string"
+        }
+      ],
+      "CMP": [
+        {
+          "id": "randomId",
+          "date": "string (MM/DD/YYYY)",
+          "Na": "string",
+          "K": "string",
+          "Cl": "string",
+          "HCO2": "string",
+          "Glu": "string",
+          "BUN": "string",
+          "Cr": "string",
+          "GFR": "string",
+          "Ca": "string",
+          "TP": "string",
+          "Alb": "string",
+          "SGPT_ALT": "string",
+          "SGOT_AST": "string",
+          "Alk_Phos": "string",
+          "T_Bili": "string"
+        }
+      ],
+      "LipidPanel": [
+        {
+          "id": "randomId",
+          "date": "string (MM/DD/YYYY)",
+          "TotChole": "string",
+          "LDL": "string",
+          "TG": "string",
+          "VLDL": "string",
+          "HDL": "string"
+        }
+      ],
+      "INR": [
+        {
+          "id": "randomId",
+          "date": "string (MM/DD/YYYY)",
+          "PT": "string",
+          "INR": "string"
+        }
+      ], 
+      "OtherValues": [
+        {
+          "id": "randomId",
+          "date": "MM/DD/YYYY",
+          "CustomTestName": "string"
+        }
+      ]
+    },
+    "updatedAt": "string (ISO date-time)",
+    "updatedBy": "string",
+    "position": "number"
   },
   'cultures': {
     'id': 'number',
@@ -712,6 +892,22 @@ Example for hpi{
   "position": "number",
   "updatedAt": "string (ISO date-time)",
   "updatedBy": "string"
+},
+'intervisitReview': {
+  'id': 'number',
+  'value':null,
+  'intervisitReviewEntries': [
+    {
+      'entryId': 'randomId', // unique identifier, e.g., "1763724191002-722279"
+      'date': 'string', // formatted as "MM/DD/YYYY"
+      'value': 'string (JSON string containing dateRange, staff, comments, facility info)',
+      'createdAt': 'string',
+      'updatedAt': 'string'
+    }
+  ],
+  'updatedAt': 'string',
+  'updatedBy': 'string',
+  'position': 'number'
 }
 }
 Given the clinical JSON data, convert it to the standardized format described above.  
