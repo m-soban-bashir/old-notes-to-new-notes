@@ -42,6 +42,7 @@ return res.data;
 
 const processRos = async (openAiRos, patientId) => {
     // Fetch already present ROS entries
+    console.log("OpenAI ROS input:", openAiRos, "Patient ID:", patientId);
     const alreadyPresentRos = await getRos(); // array of {id, name, ...}
 
     // Map existing ROS for faster lookup (case-insensitive)
@@ -53,29 +54,31 @@ const processRos = async (openAiRos, patientId) => {
     // Process OpenAI ROS entries
     const result = await Promise.all(
         openAiRos.map(async rosEntry => {
-            const rosLower = rosEntry?.value.toLowerCase();
+            const rosValue = rosEntry?.value?.trim();
+            const rosLower = rosValue?.toLowerCase();
             let payload;
 
             if (presentMap.has(rosLower)) {
-                // Already exists, just send id and patientId
+                // Already exists
                 payload = { id: presentMap.get(rosLower), patientId };
             } else {
                 // New ROS entry
-                payload = { isNew: true, name: rosEntry?.value, label: rosEntry?.value, patientId };
+                payload = { isNew: true, name: rosValue, label: rosValue, patientId };
             }
 
-            // Update backend for each ROS entry
+            console.log("Updating ROS with payload:", payload);
             await updateRos(payload);
 
-            // Return the entry info for final array
+            // Return info for final array
             return presentMap.has(rosLower)
                 ? { id: presentMap.get(rosLower) }
-                : { isNew: true, name: rosEntry, label: rosEntry };
+                : { isNew: true, name: rosValue, label: rosValue };
         })
     );
 
     return result;
 };
+
 
 
 

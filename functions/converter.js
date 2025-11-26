@@ -86,7 +86,7 @@ const notesConverter = async () => {
       getApiResponce(labs, true),
       getApiResponce(subjectiveAndDailyUpdates, false, true),
       getApiResponce(all, false, false, true),
-      getApiResponce(ros, false, false, false,true)
+      getApiResponce(ros.value, false, false, false,true)
 
 
     ]);
@@ -109,6 +109,8 @@ const notesConverter = async () => {
       parsedRos = formatAIResponse(openAiResponseRos);
 
 console.log(parsedAll,"ParsedAll")
+console.log(parsedRos,"parsedRos")
+
     } catch (err) {
       console.error("❌ Could not parse AI response for", patient.lastName, patient.firstName);
       continue;

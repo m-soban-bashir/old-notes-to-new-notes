@@ -41,7 +41,7 @@ const allPrompt = fs.readFileSync(
   "utf-8"
 );
 const rosPrompt = fs.readFileSync(
-  path.join(__dirname, "../../prompt/allPrompt.txt"),
+  path.join(__dirname, "../../prompt/rosPrompt.txt"),
   "utf-8"
 );
 

@@ -383,6 +383,26 @@ ${Date.now()}-${Math.floor(Math.random() * 1000000)}
 Preserve the styling structure of this section 
 ---
 
+
+### 13# Assessment Plan PE-style Standardized Prompt
+Generate the assessmentPlan.value field as an HTML block using this rule: Scan the input for each problem/diagnosis line (as presented in the HTML in the value), and list each condition as a bullet point in the same order, with the left side being the full diagnosis/section heading exactly as in the input (including any text like dates, parentheses, etc.), and the right side being the corresponding assessment/plan text. If the plan or value is missing after a diagnosis, insert [** to be verified **]. Never remove, reorder, or merge fields. Never summarize or omit. Always use every diagnosis as it appears.
+Formatting:
+Output as:
+<p>\n <b>[First full diagnosis exactly as in input]:</b>\n [corresponding plan or "[** to be verified **]"]<br> <b>[Second full diagnosis exactly as in input]:</b> [corresponding plan or "[** to be verified **]"]<br>\n ... </p>
+Always include each field, even if assessment text is missing.
+Diagnosis/plan pairs must be assembled/per diagnosis line, not per atomic condition.
+Rules:
+Parse the input HTML <b>Diagnosis:</b> Plan<br> pairs verbatim and output them with no changes.
+Never aggregate or summarize diagnoses—each line is its own entry, even if multiple problems are contained in one headline.
+Never reorder, remove, or merge.
+Always use <p>, <b>, <br>, and \n only. No style, markdown, or other HTML.
+Example Input
+"value": "<p>\n<b>Chronic kidney disease, Stage 3:</b> Continue nephrology follow-up.<br>\n<b>Type 2 Diabetes Mellitus:</b> [** to be verified **]<br>\n</p>"
+Corresponding Output
+<p>\n <b>Chronic kidney disease, Stage 3:</b> Continue nephrology follow-up.<br>\n <b>Type 2 Diabetes Mellitus:</b> [** to be verified **]<br>\n </p>
+If you find additional diagnoses not in the original input, append them at the end (same format). Never reorder template. ALWAYS output as pure HTML string, never Markdown.
+
+
 ## Complete Schema Reference
 
 ```json
