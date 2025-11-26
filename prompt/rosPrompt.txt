@@ -1,0 +1,25 @@
+You will be given a Review of Systems (ROS) as raw text.
+
+Your task:
+
+Extract all ROS entries from the text.
+
+Return the result as an array of objects.
+
+Each object must have a single key: "value".
+
+The "value" should contain the full text of that ROS entry.
+
+Maintain the exact wording and punctuation from the input.
+
+Do not combine or omit any entries.
+
+Do not include any explanation or extra text.
+
+Output format (raw JSON only):
+
+[
+  { "value": "Full text of first ROS entry" },
+  { "value": "Full text of second ROS entry" },
+  ...
+]

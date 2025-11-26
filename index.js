@@ -1,5 +1,6 @@
 import notesConverter  from "./functions/converter.js";
 import dotenv from "dotenv";
+import { processAll } from "./functions/helper/updateAll.js";
 dotenv.config();
 
 

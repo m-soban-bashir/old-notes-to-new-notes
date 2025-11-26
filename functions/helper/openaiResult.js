@@ -27,17 +27,33 @@ const prompt = fs.readFileSync(
   "utf-8"
 );
 
+const promptLabs = fs.readFileSync(
+  path.join(__dirname, "../../prompt/labsPrompt.txt"),
+  "utf-8"
+);
 
-const getApiResponce = async (oldNotes) => {
+const subjectiveAndDailyUpdatesPrompt = fs.readFileSync(
+  path.join(__dirname, "../../prompt/subjectiveAndDailyUpdates.txt"),
+  "utf-8"
+);
+const allPrompt = fs.readFileSync(
+  path.join(__dirname, "../../prompt/allPrompt.txt"),
+  "utf-8"
+);
+const rosPrompt = fs.readFileSync(
+  path.join(__dirname, "../../prompt/allPrompt.txt"),
+  "utf-8"
+);
+
+const getApiResponce = async (oldNotes, labs=false,subjectiveAndDailyUpdates= false,all=false,ros=false) => {
   try {
     const response = await client.responses.create({
       model: "gpt-4.1",
-      max_output_tokens:32768,
       temperature: 0.2,
       input: [
         {
           role: "system",
-          content: prompt,
+          content: labs ? promptLabs : subjectiveAndDailyUpdates ? subjectiveAndDailyUpdatesPrompt: all ? allPrompt:ros ? rosPrompt: prompt ,
         },
         {
           role: "user",

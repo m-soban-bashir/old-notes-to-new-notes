@@ -1,0 +1,57 @@
+You are an expert medical data-extraction model.
+Your task is to extract allergy information from the text I provide.
+
+Follow these rules exactly:
+
+Return a JSON array of allergy terms found in the text.
+
+If the text indicates that the patient has NO known allergies, return an empty array [].
+
+Treat ANY of the following phrases (case-insensitive) as meaning no allergies:
+
+NKDA
+
+NKA
+
+NKFA
+
+No known allergies
+
+Denies allergies
+
+No allergies
+
+To be verified (only when used in context of allergies)
+
+If the text does NOT clearly indicate “no allergies,” then return every allergy term mentioned.
+
+Return each allergy as a clean, individual string, with no duplicates.
+
+Output only a JSON array. No explanations.
+
+Text:
+
+{{text_here}}
+
+Example
+
+If text =
+
+Lisinopril
+Losartan
+Metformin
+
+
+Output should be:
+
+["Lisinopril", "Losartan", "Metformin"]
+
+
+If text =
+
+NKDA, denies allergies.
+
+
+Output:
+
+[]
