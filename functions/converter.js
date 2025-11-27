@@ -67,7 +67,9 @@ const notesConverter = async () => {
     const subjectiveAndDailyUpdates = note.notesJson.subjectiveAndDailyUpdates || {}
     const all = note.notesJson.all || {}
     const ros = note.notesJson.ros || {}
+    const assessmentPlan = note.notesJson.assessmentPlan || {}
 
+    delete note.notesJson.assessmentPlan
     delete note.notesJson.ros
     delete note.notesJson.all
     delete note.notesJson.labs;
@@ -80,13 +82,15 @@ const notesConverter = async () => {
       openAiResponseWithLabs,
       subjectiveAndDailyUpdatesonly,
       openAiResponseAll,
-      openAiResponseRos
+      openAiResponseRos,
+      openAiResponseAssessmentPlan
     ] = await Promise.all([
       getApiResponce(notesJson),
       getApiResponce(labs, true),
       getApiResponce(subjectiveAndDailyUpdates, false, true),
       getApiResponce(all, false, false, true),
-      getApiResponce(ros.value, false, false, false,true)
+      getApiResponce(ros.value, false, false, false,true),
+      getApiResponce(assessmentPlan, false, false, false,false,true),
 
 
     ]);
@@ -98,6 +102,8 @@ const notesConverter = async () => {
     let parsedSubjectiveAndDailyUpdatesonly = {}
     let parsedAll = []
     let parsedRos = []
+    let parsedAssessMentPlan = {}
+
 
 
 
@@ -107,9 +113,11 @@ const notesConverter = async () => {
       parsedSubjectiveAndDailyUpdatesonly = formatAIResponse(subjectiveAndDailyUpdatesonly);
       parsedAll = formatAIResponse(openAiResponseAll);
       parsedRos = formatAIResponse(openAiResponseRos);
+      parsedAssessMentPlan = formatAIResponse(openAiResponseAssessmentPlan);
+      
 
-console.log(parsedAll,"ParsedAll")
-console.log(parsedRos,"parsedRos")
+// console.log(parsedAll,"ParsedAll")
+console.log(parsedAssessMentPlan,"parsedAssessMentPlan")
 
     } catch (err) {
       console.error("❌ Could not parse AI response for", patient.lastName, patient.firstName);
@@ -121,7 +129,8 @@ console.log(parsedRos,"parsedRos")
       customNotes: {
         ...parsedData,
         labs: parsedLabs,
-        subjectiveAndDailyUpdates: parsedSubjectiveAndDailyUpdatesonly
+        subjectiveAndDailyUpdates: parsedSubjectiveAndDailyUpdatesonly,
+        assessmentPlan:parsedAssessMentPlan.assessmentPlan
       }
     };
 

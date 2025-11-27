@@ -45,7 +45,12 @@ const rosPrompt = fs.readFileSync(
   "utf-8"
 );
 
-const getApiResponce = async (oldNotes, labs=false,subjectiveAndDailyUpdates= false,all=false,ros=false) => {
+const assessmentPlanPrompt = fs.readFileSync(
+  path.join(__dirname, "../../prompt/assessmentPlan.txt"),
+  "utf-8"
+);
+
+const getApiResponce = async (oldNotes, labs=false,subjectiveAndDailyUpdates= false,all=false,ros=false,assessmentPlan=false) => {
   try {
     const response = await client.responses.create({
       model: "gpt-4.1",
@@ -53,7 +58,7 @@ const getApiResponce = async (oldNotes, labs=false,subjectiveAndDailyUpdates= fa
       input: [
         {
           role: "system",
-          content: labs ? promptLabs : subjectiveAndDailyUpdates ? subjectiveAndDailyUpdatesPrompt: all ? allPrompt:ros ? rosPrompt: prompt ,
+          content: labs ? promptLabs : subjectiveAndDailyUpdates ? subjectiveAndDailyUpdatesPrompt: all ? allPrompt:ros ? rosPrompt: assessmentPlan?assessmentPlanPrompt:prompt,
         },
         {
           role: "user",

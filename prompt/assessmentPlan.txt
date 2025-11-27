@@ -1,0 +1,418 @@
+# Assessment Plan (assessmentPlan) Transformation Prompt
+
+## Core Mission
+Transform the `assessmentPlan` section from source data (HTML or plain text) to standardized HTML format with **exact structure formatting**. Extract each diagnosis/problem and its corresponding plan, preserving exact wording and order.
+
+---
+
+## Schema
+
+```json
+{
+  "assessmentPlan": {
+    "id": "number",
+    "value": "string (HTML format)",
+    "position": "number",
+    "updatedAt": "ISO string",
+    "updatedBy": "string"
+  }
+}
+```
+
+---
+
+## Required Output Structure
+
+**CRITICAL: The structure must look EXACTLY like this:**
+
+```html
+<p>\n
+            <b>Diagnosis Name:</b> Plan text<br>\n
+            <b>Diagnosis Name:</b> Plan text<br>\n
+            <b>Diagnosis Name:</b> Plan text<br>\n
+            </p>
+```
+
+**Key Formatting Rules:**
+1. **After opening `<p>` tag**: `<p>\n` (newline immediately after)
+2. **After each `<br>` tag**: `<br>\n` (newline immediately after)
+3. **Before closing `</p>` tag**: `\n</p>` (newline with indentation before)
+4. **Pattern**: `<p>\n            <b>...</b><br>\n            <b>...</b><br>\n            </p>`
+5. **Indentation**: 12 spaces before each `<b>` tag and before `</p>`
+
+---
+
+## Example Output Structure
+
+```html
+<p>\n
+            <b>Acute Metabolic Encephalopathy, resolving (08/2025):</b> Continue management per primary. Monitor for clinical deterioration. Goal is to treat the underlying cause.<br>\n
+            <b>Septic Shock (Resolved), Hypotension (Resolved), History of Hypertension:</b> Continue management per primary. Monitor vital signs and symptoms such as chest pain or dizziness. Goal is to maintain mean arterial pressure above 80 mmHg.<br>\n
+            <b>Sepsis, Community-Acquired Pneumonia (08/25), Bilateral lower extremity wounds, history of MRSA cellulitis:</b> Completed antibiotics. Continue management per infectious disease. Monitor for fever, shortness of breath, and mental status. Goal is to resolve infection and prevent recurrence. Risk of death if disease progresses.<br>\n
+            <b>Chronic hypoxemic respiratory failure secondary to chronic obstructive pulmonary disease and bilateral pleural effusions, Bilateral pleural effusions, right loculated, status post thoracentesis:</b> Continue management per pulmonologist. Provide chest physiotherapy and supportive care. Monitor for exacerbations, aspiration, and oxygen saturation. Goal is to keep oxygen saturation above 90%.<br>\n
+            </p>
+```
+
+---
+
+## Input Format Recognition
+
+**The source data may come in various formats:**
+
+### Format 1: HTML with `<strong>` tags
+```html
+<p><strong>Diagnosis:</strong> Plan text</p>
+```
+
+### Format 2: HTML with `<b>` tags
+```html
+<p><b>Diagnosis:</b> Plan text</p>
+```
+
+### Format 3: Plain text with patterns
+```
+Diagnosis: Plan text
+Another diagnosis: More plan text
+```
+
+### Format 4: Numbered/bulleted list
+```
+1. Diagnosis: Plan text
+2. Another diagnosis: Plan text
+```
+
+### Format 5: JSON object with key-value pairs
+```json
+{
+  "diabetes_management": "Continue insulin",
+  "hypertension": "Monitor BP daily"
+}
+```
+
+### Format 6: Mixed HTML with intro text
+```html
+<p>Multiple databases were reviewed...</p>
+<p><strong>Diagnosis:</strong> Plan</p>
+```
+
+---
+
+## Transformation Rules
+
+### 1. Identify Diagnosis/Plan Pairs
+
+**Look for these patterns in ANY format:**
+
+| Pattern | Example | How to Extract |
+|---------|---------|----------------|
+| **Bold text followed by colon** | `<strong>CHF:</strong> Plan` | Text before `:` = Diagnosis |
+| **Text ending with colon** | `Diabetes Mellitus: Plan` | Text before `:` = Diagnosis |
+| **Numbered items** | `1. COPD: Plan` | Remove number, text before `:` = Diagnosis |
+| **Bullet points** | `• AKI: Plan` | Remove bullet, text before `:` = Diagnosis |
+| **JSON keys** | `"copd_exacerbation": "Plan"` | Transform key = Diagnosis |
+| **Paragraph headers** | Text in bold/strong at start | Entire bold text = Diagnosis |
+
+### 2. Extract Diagnosis Text
+
+**Rules for extracting diagnosis:**
+- Take all text **before** the first colon `:`
+- Include ALL text, even if very long
+- Preserve:
+  - Dates in parentheses: `(08/25)`, `(09/25)`
+  - Status terms: `Resolved`, `resolving`, `status post`
+  - Multiple conditions: `Sepsis, CAP, wounds`
+  - Commas and punctuation
+  - Capitalization exactly as written
+- Remove:
+  - HTML tags (`<strong>`, `<b>`, `<p>`)
+  - Numbers (if numbered list): `1.`, `2.`
+  - Bullets: `•`, `-`, `*`
+  - Extra whitespace
+
+### 3. Extract Plan Text
+
+**Rules for extracting plan:**
+- Take all text **after** the first colon `:`
+- Continue until:
+  - Next diagnosis starts (next bold text or colon pattern)
+  - End of paragraph/entry
+  - New numbered/bulleted item
+- Preserve:
+  - Complete sentences
+  - All details and medical terminology
+  - Punctuation
+- Remove:
+  - HTML tags (`<p>`, `</p>`)
+  - `&nbsp;` entities
+  - Trailing spaces
+
+### 4. Handle Special Cases
+
+**No colon separator:**
+If diagnosis doesn't have `:` but has bold text:
+```html
+<strong>Chronic Heart Failure</strong> Continue management
+```
+→ Output:
+```html
+<b>Chronic Heart Failure:</b> Continue management<br>\n
+```
+(Add the colon)
+
+**Missing plan:**
+If diagnosis exists but no plan text:
+```html
+<b>Unspecified condition:</b> [** to be verified **]<br>\n
+```
+
+**JSON key format:**
+Transform keys to readable diagnosis:
+- `diabetes_type_2` → `Diabetes Type 2`
+- `acute_kidney_injury` → `Acute Kidney Injury`
+- Replace `_` with space, capitalize each word
+
+---
+
+## Processing Algorithm
+
+```
+1. READ source data (HTML, text, or JSON)
+
+2. SKIP non-diagnosis content:
+   - Skip "Multiple databases..." or intro paragraphs
+   - Skip empty elements (<p>&nbsp;</p>)
+   - Skip navigation/header text
+
+3. IDENTIFY diagnosis/plan patterns:
+   IF HTML format:
+      - Look for <strong>, <b>, or bold patterns
+      - Extract text before/after ":"
+   
+   IF plain text format:
+      - Look for lines with ":" separator
+      - Look for numbered/bulleted lists
+      - Extract text before/after ":"
+   
+   IF JSON format:
+      - Each key = diagnosis (transform to readable)
+      - Each value = plan
+
+4. FOR EACH diagnosis/plan pair:
+   a. EXTRACT diagnosis text (remove HTML, numbers, bullets)
+   b. EXTRACT plan text (remove HTML, &nbsp;)
+   c. CLEAN both texts (trim spaces)
+   d. ENSURE diagnosis ends with ":"
+   e. FORMAT as: 
+      12 spaces + <b>Diagnosis:</b> + space + Plan + <br>\n
+
+5. WRAP all entries:
+   - Start: <p>\n
+   - Each entry: (12 spaces)<b>Diagnosis:</b> Plan<br>\n
+   - End: (12 spaces)</p>
+
+6. RETURN complete HTML string
+```
+
+---
+
+## Complete Examples
+
+### Example 1: HTML with `<strong>` tags
+
+**Input:**
+```html
+<p>Multiple databases were reviewed.</p>
+<p><strong>Chronic hypoxemic respiratory failure:</strong> Continue management per pulmonologist. Monitor oxygen saturation.</p>
+<p><strong>Sepsis:</strong> Completed antibiotics. Monitor for fever.</p>
+```
+
+**Output:**
+```html
+<p>\n
+            <b>Chronic hypoxemic respiratory failure:</b> Continue management per pulmonologist. Monitor oxygen saturation.<br>\n
+            <b>Sepsis:</b> Completed antibiotics. Monitor for fever.<br>\n
+            </p>
+```
+
+---
+
+### Example 2: Plain text format
+
+**Input:**
+```
+Diabetes Mellitus Type 2: Continue insulin sliding scale, target glucose 140-180
+Hypertension: Continue home medications, monitor BP QID
+Acute Kidney Injury: Hold nephrotoxic medications, monitor creatinine daily
+```
+
+**Output:**
+```html
+<p>\n
+            <b>Diabetes Mellitus Type 2:</b> Continue insulin sliding scale, target glucose 140-180<br>\n
+            <b>Hypertension:</b> Continue home medications, monitor BP QID<br>\n
+            <b>Acute Kidney Injury:</b> Hold nephrotoxic medications, monitor creatinine daily<br>\n
+            </p>
+```
+
+---
+
+### Example 3: Numbered list format
+
+**Input:**
+```
+1. CHF exacerbation: Diurese with IV furosemide 40mg BID
+2. COPD: Continue albuterol nebs Q4H
+3. Diabetes: Insulin sliding scale
+```
+
+**Output:**
+```html
+<p>\n
+            <b>CHF exacerbation:</b> Diurese with IV furosemide 40mg BID<br>\n
+            <b>COPD:</b> Continue albuterol nebs Q4H<br>\n
+            <b>Diabetes:</b> Insulin sliding scale<br>\n
+            </p>
+```
+
+---
+
+### Example 4: JSON object format
+
+**Input:**
+```json
+{
+  "acute_respiratory_failure": "Continue mechanical ventilation, wean as tolerated",
+  "septic_shock": "Broad-spectrum antibiotics, vasopressor support",
+  "aki_on_ckd": "Nephrology consulted, possible dialysis"
+}
+```
+
+**Output:**
+```html
+<p>\n
+            <b>Acute Respiratory Failure:</b> Continue mechanical ventilation, wean as tolerated<br>\n
+            <b>Septic Shock:</b> Broad-spectrum antibiotics, vasopressor support<br>\n
+            <b>Aki On Ckd:</b> Nephrology consulted, possible dialysis<br>\n
+            </p>
+```
+
+---
+
+### Example 5: Mixed HTML without bold tags
+
+**Input:**
+```html
+<p>Assessment and Plan:</p>
+<p>Pneumonia: Continue antibiotics for 7 days</p>
+<p>Dehydration: IV fluids ongoing</p>
+```
+
+**Output:**
+```html
+<p>\n
+            <b>Pneumonia:</b> Continue antibiotics for 7 days<br>\n
+            <b>Dehydration:</b> IV fluids ongoing<br>\n
+            </p>
+```
+
+---
+
+## Edge Cases
+
+### Case 1: No colon in diagnosis
+**Input:**
+```html
+<strong>Chronic Heart Failure</strong> Continue diuresis
+```
+
+**Output (add colon):**
+```html
+<b>Chronic Heart Failure:</b> Continue diuresis<br>\n
+```
+
+### Case 2: Multiple colons in text
+**Input:**
+```
+Diabetes: HbA1c goal: <7%, Current: 8.5%
+```
+
+**Output (first colon splits diagnosis/plan):**
+```html
+<b>Diabetes:</b> HbA1c goal: <7%, Current: 8.5%<br>\n
+```
+
+### Case 3: Very long diagnosis
+**Input:**
+```html
+<p><strong>Chronic hypoxemic respiratory failure secondary to chronic obstructive pulmonary disease and bilateral pleural effusions, Bilateral pleural effusions, right loculated, status post thoracentesis:</strong> Plan text</p>
+```
+
+**Output (preserve complete, single line):**
+```html
+<b>Chronic hypoxemic respiratory failure secondary to chronic obstructive pulmonary disease and bilateral pleural effusions, Bilateral pleural effusions, right loculated, status post thoracentesis:</b> Plan text<br>\n
+```
+
+### Case 4: Empty or missing plan
+**Input:**
+```
+Anemia:
+```
+
+**Output:**
+```html
+<b>Anemia:</b> [** to be verified **]<br>\n
+```
+
+### Case 5: Plan spans multiple paragraphs
+**Input:**
+```html
+<p><strong>CHF:</strong> Continue diuresis.</p>
+<p>Monitor daily weights and strict I&O.</p>
+```
+
+**Output (combine):**
+```html
+<b>CHF:</b> Continue diuresis. Monitor daily weights and strict I&O.<br>\n
+```
+output schema  should be like this 
+ "assessmentPlan": { "id": 0, "value": "", "position": 0, "updatedAt": "", "updatedBy": "" },
+ all the above html should be in `value` of above schema 
+ Dont return me anything which cannot be parsed 
+ return me json and dont send me any thing like ```json or ```html
+ Pick all the data of id position value updatedAt updatedAt from the provided data
+---
+
+## Validation Checklist
+
+Before returning output, verify:
+
+- [ ] Starts with: `<p>\n`
+- [ ] Ends with: `            </p>` (with 12 spaces)
+- [ ] Each entry format: `            <b>Diagnosis:</b> Plan<br>\n`
+- [ ] All HTML tags converted/removed properly
+- [ ] All `&nbsp;` removed completely
+- [ ] All diagnosis text preserved exactly
+- [ ] All plan text preserved completely
+- [ ] Proper `\n` after `<p>` and after each `<br>`
+- [ ] 12 spaces indentation before each `<b>` and before `</p>`
+- [ ] No inline styles
+- [ ] Same order as input
+- [ ] Valid HTML structure
+- [ ] Every diagnosis ends with `:`
+
+---
+
+## Processing Instruction
+
+**Transform the provided assessmentPlan data (any format) to standardized structure:**
+
+1. Identify the input format (HTML, plain text, JSON, etc.)
+2. Skip introductory/non-diagnosis content
+3. Extract all diagnosis/plan pairs using pattern matching
+4. Clean and normalize text (remove tags, entities, extra spaces)
+5. Format each entry: `            <b>Diagnosis:</b> Plan<br>\n`
+6. Wrap in: `<p>\n ... </p>` with proper indentation
+7. Return complete HTML string
+
+
+

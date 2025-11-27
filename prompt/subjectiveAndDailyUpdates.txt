@@ -44,7 +44,7 @@ ${Date.now()}-${Math.floor(Math.random() * 1000000)}
 - Include ALL dates found in source data
 - Never skip older dates
 - Maintain chronological order
-- Never invent data—use `[** to be verified **]` for missing fields
+- Never invent data—use `-` for missing fields
 - Never output empty strings or "TBD"
 
 ---
