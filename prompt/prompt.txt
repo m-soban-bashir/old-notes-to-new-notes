@@ -371,7 +371,6 @@ ${Date.now()}-${Math.floor(Math.random() * 1000000)}
   "position": "number"
 }
 ```
-
 **Special DateRange Rules:**
 1. Extract start/end dates from source
 2. Format: `["2025-10-25T05:36:04.754Z", "2025-11-24T07:21:20.000Z"]`
@@ -382,6 +381,46 @@ ${Date.now()}-${Math.floor(Math.random() * 1000000)}
 
 Preserve the styling structure of this section 
 ---
+
+
+### 13. PPS
+
+**Template:**
+```html
+<p>\n
+<b>PPS:</b> [** to be verified **]<br>\n
+<b>FAST:</b> [** to be verified **]<br>\n
+<b>ECOG:</b> [** to be verified **]<br>\n
+<b>Prognosis:</b> [** to be verified **]<br>\n
+</p>
+```
+**Rules:**
+- Never remove/reorder existing sections
+- Append additional  fields at end
+- Can add new sections if found in source
+
+---
+### 14. patientAndFamilyGoals
+
+**Template:**
+```html
+<p>\n
+<b>Advanced Care Planning/POLST:</b> [** to be verified **]<br>\n
+<b>Patients capacity:</b> [** to be verified **]<br>\n
+<b>Decision Maker:</b> [** to be verified **]<br>\n
+<b>Point of Contact:</b> [** to be verified **]<br>\n
+<b>Family Dynamics:</b> [** to be verified **]<br>\n
+</p>
+```
+**Rules:**
+- Never remove/reorder existing sections
+- Append additional fields at end
+- Can add new sections if found in source
+- if any data present which is not related to these sections then add  section with name `Others` and put data in that section
+---
+
+
+
 
 
 ## Complete Schema Reference
