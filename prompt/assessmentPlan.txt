@@ -378,7 +378,7 @@ output schema  should be like this
  "assessmentPlan": { "id": 0, "value": "", "position": 0, "updatedAt": "", "updatedBy": "" },
  all the above html should be in `value` of above schema 
  Dont return me anything which cannot be parsed 
- return me json and dont send me any thing like ```json or ```html
+ return me json and dont send me any thing like ```json or ```html which cannot be parsed
  Pick all the data of id position value updatedAt updatedAt from the provided data
 ---
 

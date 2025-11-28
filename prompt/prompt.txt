@@ -371,15 +371,20 @@ ${Date.now()}-${Math.floor(Math.random() * 1000000)}
   "position": "number"
 }
 ```
+**Styling Rules:**
+1. styling should be same as it is in provided data against each date(but donot send me any thing which cannot be parsed)
+
 **Special DateRange Rules:**
 1. Extract start/end dates from source
 2. Format: `["2025-10-25T05:36:04.754Z", "2025-11-24T07:21:20.000Z"]`
 3. **Add 1 day to end date** (e.g., 10/25 → use 10/26)
 4. Use US/Canada timezone context
 5. No dummy dates—only real dates from source
-6. If only one date is present start and last date should be same and if range is present then there shouuld be that range
-
-Preserve the styling structure of this section 
+6. If only one date is present start and end date should be same (`["2025-10-25T05:36:04.754Z", "2025-10-25T05:36:04.754Z"]`) and add 1 day as well and if range is present then there shouuld be that range adn alsoa dd a day
+ for Example if you find this 11/17/2025  then you should include  ["2025-11-18T00:00:00.000Z", "2025-11-18T00:00:00.000Z"] in case of one date and if you find two dates ["2025-10-25T05:36:04.754Z", "2025-10-25T05:36:04.754Z"] then this is the formate
+7. must include all the single dates as well as date ranges , dont fill all the data against single entry
+9. Against each date content of only that date should be present(against one date only that date content should be present)
+ dont return me anything which canot be parsed but keep the html structure
 ---
 
 
