@@ -77,23 +77,46 @@ const notesConverter = async () => {
 
     console.log("getting open ai responses (parallel)");
 
-    const [
-      openAiResponseWithoutLabs,
-      openAiResponseWithLabs,
-      subjectiveAndDailyUpdatesonly,
-      openAiResponseAll,
-      openAiResponseRos,
-      openAiResponseAssessmentPlan
-    ] = await Promise.all([
-      getApiResponce(notesJson),
-      getApiResponce(labs, true),
-      getApiResponce(subjectiveAndDailyUpdates, false, true),
-      getApiResponce(all, false, false, true),
-      getApiResponce(ros.value, false, false, false,true),
-      getApiResponce(assessmentPlan, false, false, false,false,true),
+    // const [
+    //   openAiResponseWithoutLabs,
+    //   openAiResponseWithLabs,
+    //   subjectiveAndDailyUpdatesonly,
+    //   openAiResponseAll,
+    //   openAiResponseRos,
+    //   openAiResponseAssessmentPlan
+    // ] = await Promise.all([
+    //   getApiResponce(notesJson),
+    //   getApiResponce(labs, true),
+    //   getApiResponce(subjectiveAndDailyUpdates, false, true),
+    //   getApiResponce(all, false, false, true),
+    //   getApiResponce(ros.value, false, false, false,true),
+    //   getApiResponce(assessmentPlan, false, false, false,false,true),
 
 
-    ]);
+    // ]);
+
+        console.log("getting AI responses (sequential processing to avoid timeout)");
+
+    console.log("🔄 Step 1/5: Processing General Notes...");
+    const openAiResponseWithoutLabs = await getApiResponce(notesJson);
+    
+    console.log("🔄 Step 2/5: Processing Labs...");
+    const openAiResponseWithLabs = await getApiResponce(labs, true);
+    
+    console.log("🔄 Step 3/5: Processing Subjective Updates...");
+    const subjectiveAndDailyUpdatesonly = await getApiResponce(subjectiveAndDailyUpdates, false, true);
+    
+    console.log("🔄 Step 4/5: Processing Allergies...");
+    const openAiResponseAll = await getApiResponce(all, false, false, true);
+    
+    console.log("🔄 Step 5/5: Processing ROS...");
+    const openAiResponseRos = await getApiResponce(ros.value, false, false, false,true);
+
+    console.log("🔄 Step 6/5: Processing Assessment Plan...")
+     const openAiResponseAssessmentPlan = await getApiResponce(assessmentPlan, false, false, false,false,true);
+
+
+    console.log("✅ All AI responses received successfully!");
 
     console.log("received all open ai responses");
 
