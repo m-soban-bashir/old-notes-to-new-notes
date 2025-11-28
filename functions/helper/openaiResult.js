@@ -53,7 +53,7 @@ const assessmentPlanPrompt = fs.readFileSync(
 const getApiResponce = async (oldNotes, labs=false,subjectiveAndDailyUpdates= false,all=false,ros=false,assessmentPlan=false) => {
   try {
     const response = await client.responses.create({
-      model: "gpt-4.1",
+      model: process.env.MODEL,
       temperature: 0.2,
       input: [
         {
