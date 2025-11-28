@@ -62,62 +62,36 @@ const notesConverter = async () => {
     if (notes.length === 0) continue;
 
     const note = notes[0];
-    const notesJson = note.notesJson || {};
-    const labs = note.notesJson.labs || {};
-    const subjectiveAndDailyUpdates = note.notesJson.subjectiveAndDailyUpdates || {}
-    const all = note.notesJson.all || {}
-    const ros = note.notesJson.ros || {}
-    const assessmentPlan = note.notesJson.assessmentPlan || {}
+    const notesJson = note.notesJson.familyMeeting || {};
+   
 
-    delete note.notesJson.assessmentPlan
-    delete note.notesJson.ros
-    delete note.notesJson.all
-    delete note.notesJson.labs;
-    delete note.notesJson.subjectiveAndDailyUpdates
+ 
 
     console.log("getting open ai responses (parallel)");
 
     const [
       openAiResponseWithoutLabs,
-      openAiResponseWithLabs,
-      subjectiveAndDailyUpdatesonly,
-      openAiResponseAll,
-      openAiResponseRos,
-      openAiResponseAssessmentPlan
     ] = await Promise.all([
       getApiResponce(notesJson),
-      getApiResponce(labs, true),
-      getApiResponce(subjectiveAndDailyUpdates, false, true),
-      getApiResponce(all, false, false, true),
-      getApiResponce(ros.value, false, false, false, true),
-      getApiResponce(assessmentPlan, false, false, false, false, true),
+    
 
 
     ]);
 
-    console.log("received all open ai responses");
+  
 
     let parsedData = {};
-    let parsedLabs = {}
-    let parsedSubjectiveAndDailyUpdatesonly = {}
-    let parsedAll = []
-    let parsedRos = []
-    let parsedAssessMentPlan = {}
+   
 
 
 
 
     try {
       parsedData = formatAIResponse(openAiResponseWithoutLabs);
-      parsedLabs = formatAIResponse(openAiResponseWithLabs);
-      parsedSubjectiveAndDailyUpdatesonly = formatAIResponse(subjectiveAndDailyUpdatesonly);
-      parsedAll = formatAIResponse(openAiResponseAll);
-      parsedRos = formatAIResponse(openAiResponseRos);
-      parsedAssessMentPlan = formatAIResponse(openAiResponseAssessmentPlan);
+  
+      
 
 
-      // console.log(parsedAll,"ParsedAll")
-      console.log(parsedAssessMentPlan, "parsedAssessMentPlan")
 
     } catch (err) {
       console.error("❌ Could not parse AI response for", patient.lastName, patient.firstName);
@@ -126,18 +100,12 @@ const notesConverter = async () => {
 
     const payload = {
       patientId: patient.id,
-      customNotes: {
-        ...parsedData,
-        labs: parsedLabs,
-        subjectiveAndDailyUpdates: parsedSubjectiveAndDailyUpdatesonly,
-        assessmentPlan: parsedAssessMentPlan.assessmentPlan
-      }
+      customNotes: parsedData,
+     
+      
     };
 
-    const rosUpdate = await processRos(parsedRos, patient.id)
-    const allUpdate = await processAll(parsedAll, patient.id)
-    console.log(rosUpdate, "ros")
-    const updated = await updateNotes(payload);
+     const updated = await updateNotes(payload);
     if (updated.status === 1) {
       const newData = {
         id: patient.id,
