@@ -176,35 +176,86 @@ ${Date.now()}-${Math.floor(Math.random() * 1000000)}
 ---
 
 ### 5. Physical Examination (PE)
+Data Structure:
+The PE section consists of two parts:
 
-**Template:**
-```html
-<p>\n
-<b>Temperature:</b> [** to be verified **]<br>\n
-<b>Blood Pressure:</b> [** to be verified **]<br>\n
-<b>Respiratory Rate:</b> [** to be verified **]<br>\n
-<b>Heart Rate:</b> [** to be verified **]<br>\n
-<b>VENTILATOR:</b> [** to be verified **]<br>\n
-<b>GEN & PSYCH:</b> [** to be verified **]<br>\n
-<b>NEURO:</b> [** to be verified **]<br>\n
-<b>EYES:</b> [** to be verified **]<br>\n
-<b>ENT:</b> [** to be verified **]<br>\n
-<b>LUNGS:</b> [** to be verified **]<br>\n
-<b>CVS:</b> [** to be verified **]<br>\n
-<b>ABD:</b> [** to be verified **]<br>\n
-<b>SKIN:</b> [** to be verified **]<br>\n
-<b>LYMPH:</b> [** to be verified **]<br>\n
-<b>MUSCULOSKELETAL:</b> [** to be verified **]<br>\n
-</p>
-```
+Vitals Array: Structured vital sign data
+Other Sections: HTML string for system examinations
 
-**Rules:**
-- Replace `[** to be verified **]` with actual data when available
-- **Match data to correct section** (temperature data → Temperature field)
-- Append additional fields at end if found in source
-- Never reorder sections
-- Include `\n` characters as shown
+Template:
+json{
+  "vitals": [
+    {
+      "field": "temp",
+      "label": "Temp",
+      "value": "",
+      "unit": "°F",
+      "vitalType": "temperature"
+    },
+    {
+      "field": "hr",
+      "label": "HR",
+      "value": "",
+      "unit": "bpm",
+      "vitalType": "heartRate"
+    },
+    {
+      "field": "bp",
+      "label": "BP",
+      "value": "",
+      "unit": "mmHg",
+      "vitalType": "bloodPressure"
+    },
+    {
+      "field": "resp",
+      "label": "Resp",
+      "value": "",
+      "unit": "breaths/min",
+      "vitalType": "respiratoryRate"
+    },
+    {
+      "field": "spo2",
+      "label": "SpO2",
+      "value": "",
+      "unit": "%",
+      "vitalType": "oxygenSaturation"
+    }
+  ],
+  "otherSections": "<p>\n<b>VENTILATOR:</b> [** to be verified **]<br>\n<b>GEN & PSYCH:</b> [** to be verified **]<br>\n<b>NEURO:</b> [** to be verified **]<br>\n<b>EYES:</b> [** to be verified **]<br>\n<b>ENT:</b> [** to be verified **]<br>\n<b>LUNGS:</b> [** to be verified **]<br>\n<b>CVS:</b> [** to be verified **]<br>\n<b>ABD:</b> [** to be verified **]<br>\n<b>SKIN:</b> [** to be verified **]<br>\n<b>LYMPH:</b> [** to be verified **]<br>\n<b>MUSCULOSKELETAL:</b> [** to be verified **]<br>\n</p>"
+}
+Rules:
+For Vitals Array:
 
+Each vital has a fixed structure with field, label, value, unit, and vitalType
+Match source data to correct vitalType:
+
+Temperature data → vitalType: "temperature" (unit: "°F")
+Heart rate data → vitalType: "heartRate" (unit: "bpm")
+Blood pressure data → vitalType: "bloodPressure" (unit: "mmHg")
+Respiratory rate data → vitalType: "respiratoryRate" (unit: "breaths/min")
+Oxygen saturation data → vitalType: "oxygenSaturation" (unit: "%")
+
+
+Leave value as empty string "" if data not available in source
+Never change field, label, unit, or vitalType properties
+Never reorder the vitals array
+All five vitals must always be present in the array
+
+For Other Sections (HTML string):
+
+Replace [** to be verified **] with actual examination findings when available
+Match data to correct section (lung findings → LUNGS field, cardiac findings → CVS field, etc.)
+Preserve exact HTML formatting including <p>, <b>, <br>, \n characters, and &amp; entities
+Never reorder the predefined sections
+Append additional examination systems at the end (before closing </p>) if found in source, following the same format: <b>SECTION_NAME:</b> findings<br>\n
+The sections order is fixed: VENTILATOR → GEN & PSYCH → NEURO → EYES → ENT → LUNGS → CVS → ABD → SKIN → LYMPH → MUSCULOSKELETAL → [additional sections]
+
+Data Extraction Priority:
+
+Extract vital signs → populate vitals array value fields
+Extract system examinations → replace [** to be verified **] in otherSections
+Add any additional examination findings as new sections at the end of otherSections
+DONT RETURN ME ANYTHING WHICH CANNOT BE PARSED
 ---
 
 ### 6. Social History
@@ -436,7 +487,52 @@ ${Date.now()}-${Math.floor(Math.random() * 1000000)}
   "currentHospitalCourse": { "id": 0, "value": "", "position": 0, "updatedAt": "", "updatedBy": "" },
   "patientAndFamilyGoals": { "id": 0, "value": "", "updatedAt": "", "updatedBy": "", "position": 0 },
   "codeStatus": { "id": 0, "value": null, "codeStatusEntries": [], "position": 0, "updatedAt": "", "updatedBy": "" },
-  "pe": { "id": 0, "value": "", "position": 0, "updatedAt": "", "updatedBy": "" },
+  "pe": {
+    "id": 9,
+    "value": {
+      "vitals": [
+        {
+          "field": "temp",
+          "label": "Temp",
+          "value": "103",
+          "unit": "°F",
+          "vitalType": "temperature"
+        },
+        {
+          "field": "hr",
+          "label": "HR",
+          "value": "",
+          "unit": "bpm",
+          "vitalType": "heartRate"
+        },
+        {
+          "field": "bp",
+          "label": "BP",
+          "value": "",
+          "unit": "mmHg",
+          "vitalType": "bloodPressure"
+        },
+        {
+          "field": "resp",
+          "label": "Resp",
+          "value": "",
+          "unit": "breaths/min",
+          "vitalType": "respiratoryRate"
+        },
+        {
+          "field": "spo2",
+          "label": "SpO2",
+          "value": "",
+          "unit": "%",
+          "vitalType": "oxygenSaturation"
+        }
+      ],
+      "otherSections": "<p>\n            <b>VENTILATOR:</b> sdfsdf<br>\n            <b>GEN &amp; PSYCH:</b> [** to be verified **]<br>\n            <b>NEURO:</b> [** to be verified **]<br>\n            <b>EYES:</b> [** to be verified **]<br>\n            <b>ENT:</b> [** to be verified **]<br>\n            <b>LUNGS:</b> [** to be verified **]<br>\n            <b>CVS:</b> [** to be verified **]<br>\n            <b>ABD:</b> [** to be verified **]<br>\n            <b>SKIN:</b> [** to be verified **]<br>\n            <b>LYMPH:</b> [** to be verified **]<br>\n            <b>sdfsdf:</b> dsfsdfdsf<br>\n            </p>"
+    },
+    "updatedAt": "2025-11-28T06:35:29.303Z",
+    "updatedBy": "frank",
+    "position": 9
+  },
   "pps": { "id": 0, "value": "", "position": 0, "updatedAt": "", "updatedBy": "" },
   "prognosis": { "id": 0, "value": "", "position": 0, "updatedAt": "", "updatedBy": "" },
   "familyMeeting": { "id": 0, "value": null, "familyMeetingEntries": [], "position": 0, "updatedAt": "", "updatedBy": "" },
