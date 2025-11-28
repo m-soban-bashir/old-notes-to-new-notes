@@ -62,81 +62,33 @@ const notesConverter = async () => {
     if (notes.length === 0) continue;
 
     const note = notes[0];
-    const notesJson = note.notesJson || {};
-    const labs = note.notesJson.labs || {};
-    const subjectiveAndDailyUpdates = note.notesJson.subjectiveAndDailyUpdates || {}
-    const all = note.notesJson.all || {}
-    const ros = note.notesJson.ros || {}
-    const assessmentPlan = note.notesJson.assessmentPlan || {}
+    const notesJson = note.notesJson.codeStatus || {};
 
-    delete note.notesJson.assessmentPlan
-    delete note.notesJson.ros
-    delete note.notesJson.all
-    delete note.notesJson.labs;
-    delete note.notesJson.subjectiveAndDailyUpdates
+
+
 
     console.log("getting open ai responses (parallel)");
 
     const [
       openAiResponseWithoutLabs,
-      openAiResponseWithLabs,
-      subjectiveAndDailyUpdatesonly,
-      openAiResponseAll,
-      openAiResponseRos,
-      openAiResponseAssessmentPlan
+
     ] = await Promise.all([
       getApiResponce(notesJson),
-      getApiResponce(labs, true),
-      getApiResponce(subjectiveAndDailyUpdates, false, true),
-      getApiResponce(all, false, false, true),
-      getApiResponce(ros.value, false, false, false, true),
-      getApiResponce(assessmentPlan, false, false, false, false, true),
-
 
     ]);
-
     console.log("received all open ai responses");
-
     let parsedData = {};
-    let parsedLabs = {}
-    let parsedSubjectiveAndDailyUpdatesonly = {}
-    let parsedAll = []
-    let parsedRos = []
-    let parsedAssessMentPlan = {}
-
-
-
-
     try {
       parsedData = formatAIResponse(openAiResponseWithoutLabs);
-      parsedLabs = formatAIResponse(openAiResponseWithLabs);
-      parsedSubjectiveAndDailyUpdatesonly = formatAIResponse(subjectiveAndDailyUpdatesonly);
-      parsedAll = formatAIResponse(openAiResponseAll);
-      parsedRos = formatAIResponse(openAiResponseRos);
-      parsedAssessMentPlan = formatAIResponse(openAiResponseAssessmentPlan);
-
-
-      // console.log(parsedAll,"ParsedAll")
-      console.log(parsedAssessMentPlan, "parsedAssessMentPlan")
 
     } catch (err) {
       console.error("❌ Could not parse AI response for", patient.lastName, patient.firstName);
       continue;
     }
-
     const payload = {
       patientId: patient.id,
-      customNotes: {
-        ...parsedData,
-        labs: parsedLabs,
-        subjectiveAndDailyUpdates: parsedSubjectiveAndDailyUpdatesonly,
-        assessmentPlan: parsedAssessMentPlan.assessmentPlan
-      }
-    };
-
-    const rosUpdate = await processRos(parsedRos, patient.id)
-    const allUpdate = await processAll(parsedAll, patient.id)
-    console.log(rosUpdate, "ros")
+      customNotes: parsedData,
+    }
     const updated = await updateNotes(payload);
     if (updated.status === 1) {
       const newData = {
@@ -151,13 +103,10 @@ const notesConverter = async () => {
           minute: '2-digit'
         })
       };
-
       processedPatients.push(newData);
-
       fs.writeFileSync(filePath, JSON.stringify(processedPatients, null, 2), "utf8");
       console.log("✅ Data saved successfully!");
     }
-
     console.log("updated the notes of", patient.lastName, patient.firstName);
   }
 };
