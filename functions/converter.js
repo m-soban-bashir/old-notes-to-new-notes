@@ -89,8 +89,8 @@ const notesConverter = async () => {
       getApiResponce(labs, true),
       getApiResponce(subjectiveAndDailyUpdates, false, true),
       getApiResponce(all, false, false, true),
-      getApiResponce(ros.value, false, false, false,true),
-      getApiResponce(assessmentPlan, false, false, false,false,true),
+      getApiResponce(ros.value, false, false, false, true),
+      getApiResponce(assessmentPlan, false, false, false, false, true),
 
 
     ]);
@@ -114,10 +114,10 @@ const notesConverter = async () => {
       parsedAll = formatAIResponse(openAiResponseAll);
       parsedRos = formatAIResponse(openAiResponseRos);
       parsedAssessMentPlan = formatAIResponse(openAiResponseAssessmentPlan);
-      
 
-// console.log(parsedAll,"ParsedAll")
-console.log(parsedAssessMentPlan,"parsedAssessMentPlan")
+
+      // console.log(parsedAll,"ParsedAll")
+      console.log(parsedAssessMentPlan, "parsedAssessMentPlan")
 
     } catch (err) {
       console.error("❌ Could not parse AI response for", patient.lastName, patient.firstName);
@@ -130,18 +130,26 @@ console.log(parsedAssessMentPlan,"parsedAssessMentPlan")
         ...parsedData,
         labs: parsedLabs,
         subjectiveAndDailyUpdates: parsedSubjectiveAndDailyUpdatesonly,
-        assessmentPlan:parsedAssessMentPlan.assessmentPlan
+        assessmentPlan: parsedAssessMentPlan.assessmentPlan
       }
     };
 
-    const rosUpdate = await processRos(parsedRos,patient.id)
-    const allUpdate = await processAll(parsedAll,patient.id)
-    console.log(rosUpdate,"ros")
+    const rosUpdate = await processRos(parsedRos, patient.id)
+    const allUpdate = await processAll(parsedAll, patient.id)
+    console.log(rosUpdate, "ros")
     const updated = await updateNotes(payload);
     if (updated.status === 1) {
       const newData = {
         id: patient.id,
         name: `${patient.lastName}, ${patient.firstName}`,
+        facilityId: patient.facilityId,
+        date: new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
       };
 
       processedPatients.push(newData);
