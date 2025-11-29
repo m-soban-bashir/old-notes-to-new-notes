@@ -98,22 +98,22 @@ const notesConverter = async () => {
         console.log("getting AI responses (sequential processing to avoid timeout)");
 
     console.log("🔄 Step 1/5: Processing General Notes...");
-    const openAiResponseWithoutLabs = await getApiResponce(notesJson);
+    // const openAiResponseWithoutLabs = await getApiResponce(notesJson);
     
     console.log("🔄 Step 2/5: Processing Labs...");
     const openAiResponseWithLabs = await getApiResponce(labs, true);
     
-    console.log("🔄 Step 3/5: Processing Subjective Updates...");
-    const subjectiveAndDailyUpdatesonly = await getApiResponce(subjectiveAndDailyUpdates, false, true);
+    // console.log("🔄 Step 3/5: Processing Subjective Updates...");
+    // const subjectiveAndDailyUpdatesonly = await getApiResponce(subjectiveAndDailyUpdates, false, true);
     
-    console.log("🔄 Step 4/5: Processing Allergies...");
-    const openAiResponseAll = await getApiResponce(all, false, false, true);
+    // console.log("🔄 Step 4/5: Processing Allergies...");
+    // const openAiResponseAll = await getApiResponce(all, false, false, true);
     
-    console.log("🔄 Step 5/5: Processing ROS...");
-    const openAiResponseRos = await getApiResponce(ros.value, false, false, false,true);
+    // console.log("🔄 Step 5/5: Processing ROS...");
+    // const openAiResponseRos = await getApiResponce(ros.value, false, false, false,true);
 
-    console.log("🔄 Step 6/5: Processing Assessment Plan...")
-     const openAiResponseAssessmentPlan = await getApiResponce(assessmentPlan, false, false, false,false,true);
+    // console.log("🔄 Step 6/5: Processing Assessment Plan...")
+    //  const openAiResponseAssessmentPlan = await getApiResponce(assessmentPlan, false, false, false,false,true);
 
 
     console.log("✅ All AI responses received successfully!");
@@ -131,16 +131,16 @@ const notesConverter = async () => {
 
 
     try {
-      parsedData = formatAIResponse(openAiResponseWithoutLabs);
+      // parsedData = formatAIResponse(openAiResponseWithoutLabs);
       parsedLabs = formatAIResponse(openAiResponseWithLabs);
-      parsedSubjectiveAndDailyUpdatesonly = formatAIResponse(subjectiveAndDailyUpdatesonly);
-      parsedAll = formatAIResponse(openAiResponseAll);
-      parsedRos = formatAIResponse(openAiResponseRos);
-      parsedAssessMentPlan = formatAIResponse(openAiResponseAssessmentPlan);
+      // parsedSubjectiveAndDailyUpdatesonly = formatAIResponse(subjectiveAndDailyUpdatesonly);
+      // parsedAll = formatAIResponse(openAiResponseAll);
+      // parsedRos = formatAIResponse(openAiResponseRos);
+      // parsedAssessMentPlan = formatAIResponse(openAiResponseAssessmentPlan);
       
 
 // console.log(parsedAll,"ParsedAll")
-console.log(parsedAssessMentPlan,"parsedAssessMentPlan")
+// console.log(parsedAssessMentPlan,"parsedAssessMentPlan")
 
     } catch (err) {
       console.error("❌ Could not parse AI response for", patient.lastName, patient.firstName);
@@ -150,16 +150,16 @@ console.log(parsedAssessMentPlan,"parsedAssessMentPlan")
     const payload = {
       patientId: patient.id,
       customNotes: {
-        ...parsedData,
+        // ...parsedData,
         labs: parsedLabs,
-        subjectiveAndDailyUpdates: parsedSubjectiveAndDailyUpdatesonly,
-        assessmentPlan:parsedAssessMentPlan.assessmentPlan
+        // subjectiveAndDailyUpdates: parsedSubjectiveAndDailyUpdatesonly,
+        // assessmentPlan:parsedAssessMentPlan.assessmentPlan
       }
     };
 
-    const rosUpdate = await processRos(parsedRos,patient.id)
-    const allUpdate = await processAll(parsedAll,patient.id)
-    console.log(rosUpdate,"ros")
+    // const rosUpdate = await processRos(parsedRos,patient.id)
+    // const allUpdate = await processAll(parsedAll,patient.id)
+    // console.log(rosUpdate,"ros")
     const updated = await updateNotes(payload);
     if (updated.status === 1) {
       const newData = {

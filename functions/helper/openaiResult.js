@@ -114,10 +114,10 @@ const getApiResponce = async (oldNotes, labs=false,subjectiveAndDailyUpdates= fa
       prompt: `${systemPrompt}\n\nUser Input:\n${JSON.stringify(oldNotes)}`,
       stream: false,
       options: {
-        temperature: 0.1,  // Lower temperature for more consistent output
-        top_p: 0.8,        // Reduced for better focus
-        num_predict: -1,   // Unlimited output tokens
-        num_ctx: 65536,    // large context window (64K tokens)
+        temperature: 0.2,  // Lower temperature for more consistent output
+        top_p: 1,        // Reduced for better focus
+        num_predict: 30000,   // Unlimited output tokens
+        num_ctx: 20536,    // large context window (64K tokens)
         repeat_penalty: 1.0
       }
     };
