@@ -76,7 +76,7 @@ ${Date.now()}-${Math.floor(Math.random() * 1000000)}
 ```json
 { 
   "codeStatus": { "id": 0, "value": null, "codeStatusEntries": [], "position": 0, "updatedAt": "", "updatedBy": "" },
-
+    "surgicalAndProcedureHistory": { "id": 0, "value": "", "position": 0, "updatedAt": "", "updatedBy": "" },
 }
 ```
 

@@ -62,7 +62,7 @@ const notesConverter = async () => {
     if (notes.length === 0) continue;
 
     const note = notes[0];
-    const notesJson = note.notesJson.codeStatus || {};
+    const notesJson ={codeStatus: note.notesJson.codeStatus,surgicalAndProcedureHistory:note.notesJson.surgicalAndProcedureHistory} || {};
 
 
 
