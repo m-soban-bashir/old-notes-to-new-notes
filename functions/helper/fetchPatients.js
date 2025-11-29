@@ -1,17 +1,18 @@
 const fetchPatients = async () => {
   const queryPayload = {
     query: {
-      id:11455,
-    //   range: [
-    // {
-    //   key: "start",
-    //   value: ["2025-11-3", "2025-11-3"],
-    // },
-  // ],
+      facilityId:[12],
+      range: [
+    {
+      key: "start",
+      value: ["2025-11-28", "2025-11-28"],
+    },
+  ],
     },
     options: {
       populate: ["patientNote"],
     },
+    isActive:true,
     isCount: true,
     findOne: false,
     dynamicSearch:true
